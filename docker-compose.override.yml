@@ -1,0 +1,22 @@
+# Docker Compose Override para desarrollo local
+# Este archivo permite personalizar la configuración sin modificar docker-compose.yml
+
+services:
+    laravel.test:
+        ports:
+            - "8001:80"
+            - "5174:5174"
+        environment:
+            - VITE_PORT=5174
+        volumes:
+            # Optimización para macOS (si es necesario)
+            - .:/var/www/html:cached
+        # Configuración adicional para desarrollo
+        stdin_open: true
+        tty: true
+        
+    pgsql:
+        ports:
+            - "5432:5432"
+        # Configuración adicional para PostgreSQL
+        command: postgres -c log_statement=all -c log_destination=stderr
