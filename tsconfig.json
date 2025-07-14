@@ -16,16 +16,17 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./resources/js/*"]
+      "@/*": ["./resources/js/*"],
+      "ziggy-js": ["./vendor/tightenco/ziggy"]
     }
   },
   "include": [
     "resources/js/**/*.ts",
+    "resources/js/**/*.d.ts",
     "resources/js/**/*.tsx",
-    "resources/js/**/*.js",
-    "resources/js/**/*.jsx",
     "resources/js/types/global.d.ts"
   ]
 }

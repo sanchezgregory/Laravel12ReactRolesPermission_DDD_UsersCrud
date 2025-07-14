@@ -1,17 +1,5 @@
-/// <reference types="react" />
-/// <reference types="react-dom" />
+import type { route as routeFn } from 'ziggy-js';
 
-declare module '@/Layouts/*' {
-    const component: React.ComponentType<any>;
-    export default component;
-}
-
-declare module '@/Components/*' {
-    const component: React.ComponentType<any>;
-    export default component;
-}
-
-declare module '@/Pages/*' {
-    const component: React.ComponentType<any>;
-    export default component;
+declare global {
+    const route: typeof routeFn;
 }

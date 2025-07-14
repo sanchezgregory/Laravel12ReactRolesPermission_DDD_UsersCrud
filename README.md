@@ -33,6 +33,7 @@ app/Src/
     ├── Providers/       # Service Providers
     ├── Repositories/    # Implementaciones de repositorios
     └── Requests/        # Form Requests
+    └── Services/        # Servicios de infraestructura
 ```
 
 ### Frontend (React + TypeScript)
