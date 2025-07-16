@@ -8,16 +8,29 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+// API routes (require authentication)
+Route::prefix('api/v1')->name('api.v1')->group(function () {
+    // Public routes for API authentication
+    require __DIR__ . '/api_auth.php';
 
-// Auth routes (must be outside auth middleware)
+    // Protected routes (require authentication and jwt)
+    Route::middleware('auth.api')->group(function () {
+        require __DIR__ . '/api_routes.php';
+    });
+});
+
+// Auth WEB routes (must be outside auth middleware)
 Route::prefix('backoffice')->name('backoffice.')->group(function () {
-    require __DIR__ . '/auth.php';
+    // Public routes for backoffice authentication
+    require __DIR__ . '/backoffice_auth.php';
+
+    // Protected routes (require authentication and admin role)
+    Route::middleware('auth.backoffice', 'role:admin')->group(function () {
+        require __DIR__ . '/backoffice_routes.php';
+    });
 });
 
-// Protected routes (require authentication and admin role)
-Route::middleware('custom.auth', 'role:admin')->prefix('backoffice')->name('backoffice.')->group(function () {
-    require __DIR__ . '/backoffice_routes.php';
-});
+
 
 Route::get('/clear-all-cache', function () {
     if (!app()->environment('production')) {

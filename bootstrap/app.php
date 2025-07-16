@@ -14,10 +14,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Excepciones para las rutas API (no validan csrf tokens)
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->alias([
-            'custom.auth' => \App\Src\Infrastructure\Middleware\EnsureUserIsAuthenticated::class,
+            'auth.backoffice' => \App\Src\Infrastructure\Middleware\EnsureUserIsAuthenticated::class,
+            'auth.api' => \App\Src\Infrastructure\Middleware\EnsureApiIsAuthenticated::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,

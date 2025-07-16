@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -30,6 +31,17 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+        $user = Auth::user();
+
+        // Verificamos que el usuario tenga al menos el rol 'regular' o 'admin'
+        if (!$user->hasAnyRole(['admin'])) {
+            Auth::logout(); // Cerramos la sesión recién creada
+
+            // Devolvemos un error de validación personalizado
+            throw ValidationException::withMessages([
+                'email' => 'No tienes los permisos necesarios para acceder.',
+            ]);
+        }
 
         $request->session()->regenerate();
 

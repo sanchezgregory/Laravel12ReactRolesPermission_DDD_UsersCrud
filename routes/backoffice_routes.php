@@ -13,7 +13,7 @@ use Inertia\Inertia;
 
 // Protected routes (require authentication and admin role)
 Route::middleware(['verified', 'role:admin'])->group(function () {
-    require __DIR__ . '/settings.php';
+    require __DIR__ . '/backoffice_settings.php';
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
