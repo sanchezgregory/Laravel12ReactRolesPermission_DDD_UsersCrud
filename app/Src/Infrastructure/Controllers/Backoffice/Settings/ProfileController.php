@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Src\Infrastructure\Controllers\Settings;
+namespace App\Src\Infrastructure\Controllers\Backoffice\Settings;
 
 use App\Src\Infrastructure\Controllers\Controller;
 use App\Src\Infrastructure\Requests\Settings\ProfileUpdateRequest;
@@ -37,7 +37,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return to_route('profile.edit');
+        return to_route('backoffice.profile.edit');
     }
 
     /**

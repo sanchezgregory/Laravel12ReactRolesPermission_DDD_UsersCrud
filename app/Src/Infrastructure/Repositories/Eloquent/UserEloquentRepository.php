@@ -1,16 +1,14 @@
 <?php
 
-namespace App\Src\Infrastructure\Repositories;
+namespace App\Src\Infrastructure\Repositories\Eloquent;
 
-use App\Models\User as UserModel; // El modelo de Eloquent
+use App\Models\User as UserModel;
 use App\Src\Domain\Contracts\UserRepositoryInterface;
-use App\Src\Domain\Entities\UserEntity; // La entidad del dominio
+use App\Src\Domain\Entities\UserEntity;
 
-class EloquentUserRepository implements UserRepositoryInterface
+class UserEloquentRepository implements UserRepositoryInterface
 {
-    public function __construct(private UserModel $model)
-    {
-    }
+    public function __construct(private UserModel $model) {}
 
     /**
      * Método privado para mapear un Modelo Eloquent a una Entidad de Dominio.
@@ -48,9 +46,9 @@ class EloquentUserRepository implements UserRepositoryInterface
     /**
      * Devuelve todos los usuarios como un array de Entidades de Dominio.
      */
-    public function all(): array
+    public function getAll(): array
     {
-        return $this->model->all()->map(fn ($userModel) => $this->toEntity($userModel))->toArray();
+        return $this->model->all()->map(fn($userModel) => $this->toEntity($userModel))->toArray();
     }
 
     /**
@@ -60,19 +58,37 @@ class EloquentUserRepository implements UserRepositoryInterface
     {
         // Busca si el modelo ya existe o crea uno nuevo
         $userModel = $this->model->findOrNew($userEntity->id);
-        
+
         // Mapea los datos desde la entidad al modelo
         $userModel->name = $userEntity->name;
         $userModel->email = $userEntity->email;
 
         // Si es un usuario nuevo, asigna la contraseña
         if (!$userEntity->id && !empty($userEntity->password)) {
-             $userModel->password = bcrypt($userEntity->password);
+            $userModel->password = bcrypt($userEntity->password);
         }
 
         $userModel->save();
 
         // Devuelve la entidad actualizada (con el ID si era nuevo)
         return $this->toEntity($userModel);
+    }
+
+    public function update(UserEntity $userEntity): UserEntity
+    {
+        $userModel = $this->model->find($userEntity->id);
+
+        $userModel->name = $userEntity->name;
+        $userModel->email = $userEntity->email;
+
+        $userModel->save();
+
+        return $this->toEntity($userModel);
+    }
+
+    public function delete(UserEntity $userEntity): void
+    {
+        $userModel = $this->model->find($userEntity->id);
+        $userModel->delete();
     }
 }

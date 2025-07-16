@@ -10,8 +10,13 @@ import AppLogo from './app-logo';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: '/backoffice/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Users',
+        href: '/backoffice/users',
+        icon: null,
     },
 ];
 

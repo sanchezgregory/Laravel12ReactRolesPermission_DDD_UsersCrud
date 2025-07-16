@@ -9,17 +9,17 @@ import { type PropsWithChildren } from 'react';
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
-        href: '/settings/profile',
+        href: '/backoffice/settings/profile',
         icon: null,
     },
     {
         title: 'Password',
-        href: '/settings/password',
+        href: '/backoffice/settings/password',
         icon: null,
     },
     {
         title: 'Appearance',
-        href: '/settings/appearance',
+        href: '/backoffice/settings/appearance',
         icon: null,
     },
 ];

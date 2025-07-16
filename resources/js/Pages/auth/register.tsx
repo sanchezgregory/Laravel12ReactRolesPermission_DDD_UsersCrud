@@ -26,7 +26,7 @@ export default function Register() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('register'), {
+        post(route('backoffice.register'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
@@ -109,7 +109,7 @@ export default function Register() {
 
                 <div className="text-center text-sm text-muted-foreground">
                     Already have an account?{' '}
-                    <TextLink href={route('login')} tabIndex={6}>
+                    <TextLink href={route('backoffice.login')} tabIndex={6}>
                         Log in
                     </TextLink>
                 </div>

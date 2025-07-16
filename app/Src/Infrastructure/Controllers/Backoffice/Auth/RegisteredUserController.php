@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Src\Infrastructure\Controllers\Auth;
+namespace App\Src\Infrastructure\Controllers\Backoffice\Auth;
 
 use App\Models\User;
 use App\Src\Infrastructure\Controllers\Controller;
@@ -46,6 +46,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(route('backoffice.dashboard', absolute: false));
     }
 }

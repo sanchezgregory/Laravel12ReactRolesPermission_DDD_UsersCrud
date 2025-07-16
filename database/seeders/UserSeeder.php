@@ -1,0 +1,20 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\User;
+
+class UserSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Gregory Sanchez',
+            'email' => 'gregorysanchez@whap.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        $user->assignRole('admin');
+    }
+}

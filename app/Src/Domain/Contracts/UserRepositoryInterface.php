@@ -1,10 +1,10 @@
-<?php 
+<?php
 
 namespace App\Src\Domain\Contracts;
 
-use App\Src\Domain\Entities\User as UserEntity;
+use App\Src\Domain\Entities\UserEntity;
 
-interface UserRepositoryInterface extends BaseEntityRepository
+interface UserRepositoryInterface
 {
     public function findById(int $id): ?UserEntity;
 
@@ -12,5 +12,9 @@ interface UserRepositoryInterface extends BaseEntityRepository
 
     public function save(UserEntity $user): UserEntity;
 
-    public function all(): array;
+    public function update(UserEntity $user): UserEntity;
+
+    public function delete(UserEntity $user): void;
+
+    public function getAll(): array;
 }

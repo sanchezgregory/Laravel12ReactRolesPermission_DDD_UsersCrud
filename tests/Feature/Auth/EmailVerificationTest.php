@@ -17,7 +17,7 @@ class EmailVerificationTest extends TestCase
     {
         $user = User::factory()->unverified()->create();
 
-        $response = $this->actingAs($user)->get('/verify-email');
+        $response = $this->actingAs($user)->get(route('backoffice.verify-email', absolute: false));
 
         $response->assertStatus(200);
     }
@@ -36,9 +36,12 @@ class EmailVerificationTest extends TestCase
 
         $response = $this->actingAs($user)->get($verificationUrl);
 
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('backoffice.verify-email', absolute: false));
+
         Event::assertDispatched(Verified::class);
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
-        $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
+        $response->assertRedirect(route('backoffice.dashboard', absolute: false) . '?verified=1');
     }
 
     public function test_email_is_not_verified_with_invalid_hash(): void
@@ -51,7 +54,16 @@ class EmailVerificationTest extends TestCase
             ['id' => $user->id, 'hash' => sha1('wrong-email')]
         );
 
-        $this->actingAs($user)->get($verificationUrl);
+        $response = $this->actingAs($user)->get($verificationUrl);
+
+        $this->assertGuest();
+        $response->assertRedirect(route('backoffice.verify-email', absolute: false));
+
+        $this->assertGuest();
+        $response->assertRedirect(route('backoffice.verify-email', absolute: false));
+
+        $this->assertGuest();
+        $response->assertRedirect(route('backoffice.verify-email', absolute: false));
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
