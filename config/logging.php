@@ -133,6 +133,12 @@ return [
             'level' => 'info',
             'days' => 30,
         ],
+        'detailed_errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/detailed_errors.log'),
+            'level' => 'debug',
+            'days' => 14,
+        ],
 
     ],
 

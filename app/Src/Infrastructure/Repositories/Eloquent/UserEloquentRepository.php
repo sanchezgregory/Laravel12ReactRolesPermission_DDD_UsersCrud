@@ -5,6 +5,7 @@ namespace App\Src\Infrastructure\Repositories\Eloquent;
 use App\Models\User as UserModel;
 use App\Src\Domain\Contracts\UserRepositoryInterface;
 use App\Src\Domain\Entities\UserEntity;
+use App\Src\Infrastructure\Exceptions\RepositoryException;
 
 class UserEloquentRepository implements UserRepositoryInterface
 {
@@ -28,7 +29,11 @@ class UserEloquentRepository implements UserRepositoryInterface
      */
     public function findById(int $id): ?UserEntity
     {
-        $userModel = $this->model->find($id);
+        try {
+            $userModel = $this->model->find($id);
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
 
         return $userModel ? $this->toEntity($userModel) : null;
     }
@@ -38,7 +43,11 @@ class UserEloquentRepository implements UserRepositoryInterface
      */
     public function findByEmail(string $email): ?UserEntity
     {
-        $userModel = $this->model->where('email', $email)->first();
+        try {
+            $userModel = $this->model->where('email', $email)->first();
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
 
         return $userModel ? $this->toEntity($userModel) : null;
     }
@@ -56,31 +65,37 @@ class UserEloquentRepository implements UserRepositoryInterface
      */
     public function save(UserEntity $userEntity): UserEntity
     {
-        // Busca si el modelo ya existe o crea uno nuevo
-        $userModel = $this->model->findOrNew($userEntity->id);
+        try {
+            // Busca si el modelo ya existe o crea uno nuevo
+            $userModel = $this->model->findOrNew($userEntity->id);
 
-        // Mapea los datos desde la entidad al modelo
-        $userModel->name = $userEntity->name;
-        $userModel->email = $userEntity->email;
+            // Mapea los datos desde la entidad al modelo
+            $userModel->name = $userEntity->name;
+            $userModel->email = $userEntity->email;
 
-        // Si es un usuario nuevo, asigna la contraseña
-        if (!$userEntity->id && !empty($userEntity->password)) {
-            $userModel->password = bcrypt($userEntity->password);
+            // Si es un usuario nuevo, asigna la contraseña
+            if (!$userEntity->id && !empty($userEntity->password)) {
+                $userModel->password = bcrypt($userEntity->password);
+            }
+
+            // Guarda el modelo
+            $userModel->save();
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
-
-        $userModel->save();
-
-        // Devuelve la entidad actualizada (con el ID si era nuevo)
         return $this->toEntity($userModel);
     }
 
     public function update(UserEntity $userEntity): UserEntity
     {
-        $userModel = $this->model->find($userEntity->id);
-
+        try {
+            $userModel = $this->model->find($userEntity->id);
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
         $userModel->name = $userEntity->name;
         $userModel->email = $userEntity->email;
-
+        $userModel->password = bcrypt($userEntity->password);
         $userModel->save();
 
         return $this->toEntity($userModel);
@@ -88,7 +103,11 @@ class UserEloquentRepository implements UserRepositoryInterface
 
     public function delete(UserEntity $userEntity): void
     {
-        $userModel = $this->model->find($userEntity->id);
+        try {
+            $userModel = $this->model->find($userEntity->id);
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
         $userModel->delete();
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+use App\Src\Application\Services\ExceptionService;
+use App\Src\Infrastructure\Exceptions\ExceptionTransformer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -42,7 +44,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->statefulApi();
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
+    ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->renderable(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            $transformedException = ExceptionTransformer::transform($e);
+            return app(ExceptionService::class)->handle($transformedException, $request);
+        });
     })
     ->create();

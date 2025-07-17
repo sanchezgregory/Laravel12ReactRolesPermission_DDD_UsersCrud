@@ -6,6 +6,8 @@ use App\Src\Domain\Contracts\UserRepositoryInterface;
 use App\Src\Infrastructure\Repositories\Eloquent\UserEloquentRepository;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use App\Src\Infrastructure\Handlers\CustomExceptionHandler;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,10 +16,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(
-            UserRepositoryInterface::class,
-            UserEloquentRepository::class
-        );
+        $this->app->extend(ExceptionHandler::class, function ($handler, $app) {
+            return new CustomExceptionHandler($handler);
+        });
+
+        $this->app->bind(UserRepositoryInterface::class, UserEloquentRepository::class);
     }
 
     /**
