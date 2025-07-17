@@ -7,29 +7,29 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import {
-    Activity,
-    ArrowDownRight,
-    ArrowUpRight,
-    CreditCard,
-    DollarSign,
-    Eye,
-    Package,
-    ShoppingCart,
-    TrendingDown,
-    TrendingUp,
-    Users
+  Activity,
+  ArrowDownRight,
+  ArrowUpRight,
+  CreditCard,
+  DollarSign,
+  Eye,
+  Package,
+  ShoppingCart,
+  TrendingDown,
+  TrendingUp,
+  Users
 } from 'lucide-react';
 import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
 } from 'recharts';
 
 const salesData = [

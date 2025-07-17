@@ -1,8 +1,12 @@
+import 'react-toastify/dist/ReactToastify.css';
 import '../css/app.css';
 
+import FullPageSpinner from '@/components/FullPageSpinner';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
+import AppWithErrorBoundary from './components/AppErrorBoundary';
 import { initializeTheme } from './hooks/use-appearance';
 
 initializeTheme();
@@ -15,7 +19,13 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        root.render(
+            <Suspense fallback={<FullPageSpinner />}>
+                <AppWithErrorBoundary>
+                    <App {...props} />
+                </AppWithErrorBoundary>
+            </Suspense>,
+        );
     },
     progress: {
         color: '#4B5563',

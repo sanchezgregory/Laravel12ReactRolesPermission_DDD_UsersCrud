@@ -10,6 +10,7 @@ interface IndexPageProps {
 }
 
 export default function Index({ users }: IndexPageProps) {
+    
     return (
         <AppLayout
             breadcrumbs={[

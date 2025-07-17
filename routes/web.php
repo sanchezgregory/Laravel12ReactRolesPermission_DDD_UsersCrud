@@ -1,5 +1,6 @@
 <?php
 
+use App\Src\Infrastructure\Controllers\Backoffice\LogErrorController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,6 +31,9 @@ Route::prefix('backoffice')->name('backoffice.')->group(function () {
     });
 });
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/log-error', LogErrorController::class)->name('api.log.error');
+});
 
 
 Route::get('/clear-all-cache', function () {
