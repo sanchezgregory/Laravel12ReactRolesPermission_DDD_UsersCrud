@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Src\Domain\Contracts;
+namespace App\Src\Domain\Contracts\RepositoryContracts;
 
 interface BaseEntityRepository
 {

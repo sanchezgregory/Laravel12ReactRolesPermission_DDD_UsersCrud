@@ -3,7 +3,7 @@
 namespace App\Src\Infrastructure\Repositories\Eloquent;
 
 use App\Models\User as UserModel;
-use App\Src\Domain\Contracts\UserRepositoryInterface;
+use App\Src\Domain\Contracts\RepositoryContracts\UserRepositoryInterface;
 use App\Src\Domain\Entities\UserEntity;
 use App\Src\Infrastructure\Exceptions\RepositoryException;
 
@@ -16,12 +16,8 @@ class UserEloquentRepository implements UserRepositoryInterface
      */
     private function toEntity(UserModel $userModel): UserEntity
     {
-        return new UserEntity(
-            id: $userModel->id,
-            name: $userModel->name,
-            email: $userModel->email,
-            roles: $userModel->getRoleNames()->toArray() // Asumiendo que usas spatie/laravel-permission
-        );
+        
+        return UserEntity::fromArray($userModel->toArray());
     }
 
     /**
@@ -86,28 +82,33 @@ class UserEloquentRepository implements UserRepositoryInterface
         return $this->toEntity($userModel);
     }
 
-    public function update(UserEntity $userEntity): UserEntity
+    public function update(int $userId, UserEntity $userEntity): void
     {
         try {
-            $userModel = $this->model->find($userEntity->id);
+            $userModel = $this->model->find($userId);
         } catch (\Exception $e) {
             throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
         $userModel->name = $userEntity->name;
         $userModel->email = $userEntity->email;
-        $userModel->password = bcrypt($userEntity->password);
+        if (!empty($userEntity->password)) {
+            $userModel->password = bcrypt($userEntity->password);
+        }       
         $userModel->save();
-
-        return $this->toEntity($userModel);
     }
 
-    public function delete(UserEntity $userEntity): void
+    public function delete(int $id): void
     {
         try {
-            $userModel = $this->model->find($userEntity->id);
+            $userModel = $this->model->find($id);
         } catch (\Exception $e) {
             throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
         $userModel->delete();
+    }
+
+    public function getUserProfileData(int $userId): array
+    {
+        return $this->model->find($userId)->toArray();
     }
 }

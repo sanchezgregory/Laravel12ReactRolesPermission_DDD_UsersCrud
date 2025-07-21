@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Src\Domain\Contracts;
+namespace App\Src\Domain\Contracts\RepositoryContracts;
 
 use App\Src\Domain\Entities\UserEntity;
 
@@ -12,9 +12,11 @@ interface UserRepositoryInterface
 
     public function save(UserEntity $user): UserEntity;
 
-    public function update(UserEntity $user): UserEntity;
+    public function update(int $userId, UserEntity $userEntity): void; 
 
-    public function delete(UserEntity $user): void;
+    public function delete(int $userId): void;
 
     public function getAll(): array;
+
+    public function getUserProfileData(int $userId): array;
 }

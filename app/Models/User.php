@@ -66,4 +66,14 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    public function toArray()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'roles' => $this->getRoleNames()->toArray(),
+        ];
+    }
 }

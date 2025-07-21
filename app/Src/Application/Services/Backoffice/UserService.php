@@ -1,15 +1,26 @@
 <?php
 
-namespace App\Src\Application\Services;
+namespace App\Src\Application\Services\Backoffice;
 
-use App\Src\Domain\Contracts\UserRepositoryInterface;
+use App\Src\Domain\Contracts\RepositoryContracts\UserRepositoryInterface;
+use App\Src\Domain\Contracts\ServiceContracts\UserServiceInterface;
 use App\Src\Domain\Entities\UserEntity;
 
-class UserService
+class UserService implements UserServiceInterface
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository
     ) {}
+
+    public function getUserProfileData(int $userId): array
+    {
+        return $this->userRepository->getUserProfileData($userId);
+    }
+
+    public function update(int $userId, UserEntity $userEntity): void
+    {
+        $this->userRepository->update($userId, $userEntity);
+    }
 
     public function findById(int $id): ?UserEntity
     {
@@ -31,13 +42,8 @@ class UserService
         return $this->userRepository->save($user);
     }
 
-    public function update(UserEntity $user): UserEntity
+    public function delete(int $userId): void
     {
-        return $this->userRepository->update($user);
-    }
-
-    public function delete(UserEntity $user): void
-    {
-        $this->userRepository->delete($user);
+        $this->userRepository->delete($userId);
     }
 }
