@@ -59,7 +59,7 @@ class UserEloquentRepository implements UserRepositoryInterface
     /**
      * Persiste una Entidad de Dominio en la base de datos.
      */
-    public function save(UserEntity $userEntity): UserEntity
+    public function save(UserEntity $userEntity): void
     {
         try {
             // Busca si el modelo ya existe o crea uno nuevo
@@ -73,7 +73,6 @@ class UserEloquentRepository implements UserRepositoryInterface
         } catch (\Exception $e) {
             throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
-        return $this->toEntity($userModel);
     }
 
     public function update(int $userId, UserEntity $userEntity): void

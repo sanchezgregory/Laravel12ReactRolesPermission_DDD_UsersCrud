@@ -17,8 +17,9 @@ class UserService implements UserServiceInterface
         return $this->userRepository->getUserProfileData($userId);
     }
 
-    public function update(int $userId, UserEntity $userEntity): void
+    public function update(int $userId, array $userEntity): void
     {
+        $userEntity = UserEntity::fromArray($userEntity);
         $this->userRepository->update($userId, $userEntity);
     }
 
@@ -37,9 +38,10 @@ class UserService implements UserServiceInterface
         return $this->userRepository->getAll();
     }
 
-    public function save(UserEntity $user): UserEntity
+    public function save(array $user): void
     {
-        return $this->userRepository->save($user);
+        $userEntity = UserEntity::fromArray($user);
+        $this->userRepository->save($userEntity);
     }
 
     public function delete(int $userId): void

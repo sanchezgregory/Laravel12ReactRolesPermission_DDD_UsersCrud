@@ -6,11 +6,13 @@ import { columns, User } from './columns';
 
 // Hacemos que la página acepte los usuarios como prop
 interface IndexPageProps {
-    users: User[];
+    users: {
+        data: User[];
+    };
 }
 
 export default function Index({ users }: IndexPageProps) {
-    
+    const usersData = users.data;
     return (
         <AppLayout
             breadcrumbs={[
@@ -39,7 +41,7 @@ export default function Index({ users }: IndexPageProps) {
                     
                     <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
                         <div className="p-6">
-                            <DataTable columns={columns} data={users} />
+                            <DataTable columns={columns} data={usersData} />
                         </div>
                     </div>
                 </div>

@@ -11,8 +11,7 @@ class StoreController extends Controller
 {
     public function __invoke(StoreUserRequest $request, UserServiceInterface $userService)
     {
-        $userEntity = UserEntity::fromRequest($request->toArray());
-        $userService->save($userEntity);
+        $userService->save($request->toArray());
         return redirect()->route('backoffice.users.index')->with('success', 'Usuario creado exitosamente.');
     }
 }

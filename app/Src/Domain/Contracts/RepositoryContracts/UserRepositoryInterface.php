@@ -10,9 +10,9 @@ interface UserRepositoryInterface
 
     public function findByEmail(string $email): ?UserEntity;
 
-    public function save(UserEntity $user): UserEntity;
+    public function save(UserEntity $user): void;
 
-    public function update(int $userId, UserEntity $userEntity): void; 
+    public function update(int $userId, UserEntity $userEntity): void;
 
     public function delete(int $userId): void;
 

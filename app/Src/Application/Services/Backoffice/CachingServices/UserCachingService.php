@@ -36,14 +36,13 @@ class UserCachingService implements UserServiceInterface
         });
     }
 
-    public function save(UserEntity $userEntity): UserEntity
+    public function save(array $userEntity): void
     {
         $this->decoratedService->save($userEntity);
         UserCreated::dispatch();
-        return $userEntity;
     }
 
-    public function update(int $userId, UserEntity $userEntity): void
+    public function update(int $userId, array $userEntity): void
     {
         $this->decoratedService->update($userId, $userEntity);
         UserUpdated::dispatch($userId);
@@ -58,7 +57,6 @@ class UserCachingService implements UserServiceInterface
     public function getAll(): array
     {
         $cacheKey = AppCacheKeys::USERS_LIST->key(null);
-
         return $this->cacheService->remember($cacheKey, self::CACHE_TTL, function () {
             return $this->decoratedService->getAll();
         });
@@ -67,7 +65,6 @@ class UserCachingService implements UserServiceInterface
     public function getUserProfileData(int $userId): array
     {
         $cacheKey = AppCacheKeys::USER_DATA->key($userId);
-
         return $this->cacheService->remember($cacheKey, self::CACHE_TTL, function () use ($userId) {
             return $this->decoratedService->getUserProfileData($userId);
         });
