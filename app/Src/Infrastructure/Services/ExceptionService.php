@@ -57,7 +57,7 @@ class ExceptionService
 
         if (
             $exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ||
-            (method_exists($exception, 'getStatusCode') && $exception->getStatusCode() === 404)
+            (method_exists($exception, 'getStatusCode') && $exception->getStatusCode() == 404)
         ) {
             return 404;
         }

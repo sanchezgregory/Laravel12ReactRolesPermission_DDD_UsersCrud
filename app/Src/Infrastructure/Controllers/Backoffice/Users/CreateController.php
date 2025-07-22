@@ -2,17 +2,18 @@
 
 namespace App\Src\Infrastructure\Controllers\Backoffice\Users;
 
+use App\Src\Domain\Contracts\RepositoryContracts\RoleRepositoryInterface;
 use App\Src\Infrastructure\Controllers\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class CreateController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(RoleRepositoryInterface $roleService): Response
     {
-        return Inertia::render('Backoffice/Users/Create', [
-            'roles' => Role::all()->pluck('name'),
+        $roles = $roleService->getAll();
+        return Inertia::render('backoffice/users/Create', [
+            'roles' => $roles,
         ]);
     }
 }

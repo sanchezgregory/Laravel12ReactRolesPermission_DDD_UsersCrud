@@ -39,7 +39,7 @@ class UserCachingService implements UserServiceInterface
     public function save(UserEntity $userEntity): UserEntity
     {
         $this->decoratedService->save($userEntity);
-        UserCreated::dispatch($userEntity->id);
+        UserCreated::dispatch();
         return $userEntity;
     }
 

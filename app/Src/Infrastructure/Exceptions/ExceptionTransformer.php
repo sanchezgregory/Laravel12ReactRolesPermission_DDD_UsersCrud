@@ -69,14 +69,14 @@ class ExceptionTransformer
         TokenMismatchException::class => 'Session expired, please try again',
 
         // Laravel Validation
-        ValidationException::class => 'Validation failed, Invalid data provided',
+        // ValidationException::class => 'Validation failed, Invalid data provided',
 
         // Laravel Files/Storage
         FileNotFoundException::class => 'Required file not found',
         InvalidFileException::class => 'Invalid file format',
 
         // Laravel Cache
-        InvalidArgumentException::class => 'Invalid operation requested',
+        // InvalidArgumentException::class => 'Invalid operation requested',
         LockTimeoutException::class => 'Operation timed out, please try again',
 
         // Laravel Queue
@@ -86,7 +86,7 @@ class ExceptionTransformer
 
         // PHP Built-in
         RuntimeException::class => 'Operation could not be completed',
-        LogicException::class => 'Invalid operation requested',
+        // LogicException::class => 'Invalid operation requested',
         OutOfBoundsException::class => 'Invalid data access attempt',
         UnderflowException::class => 'Operation cannot be completed',
         RangeException::class => 'Value out of acceptable range',

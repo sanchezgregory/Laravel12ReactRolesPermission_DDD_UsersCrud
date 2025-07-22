@@ -4,7 +4,8 @@ namespace App\Src\Infrastructure\Requests\Backoffice\Users;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreUserRequest extends FormRequest
+
+class UpdateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,10 +16,10 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'email' => 'nullable|email|max:255|unique:users,email,' . $this->route('id'),
+            'password' => 'nullable|min:8|confirmed',
+            'password_confirmation' => 'nullable|min:8|same:password',
             'roles' => 'required|array',
-            'password_confirmation' => 'required|min:8|same:password',
         ];
     }
 
@@ -36,17 +37,16 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name.required' => 'El nombre es obligatorio.',
-            'email.required' => 'El correo electrónico es obligatorio.',
-            'email.email' => 'El correo electrónico debe ser válido.',
-            'email.unique' => 'El correo electrónico ya está en uso.',
+            'email.required' => 'El email es obligatorio.',
+            'email.email' => 'El email debe ser un correo electrónico válido.',
+            'email.unique' => 'El email ya está en uso.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
-            'roles.required' => 'El rol es obligatorio.',
             'password_confirmation.required' => 'La confirmación de la contraseña es obligatoria.',
-            'roles.exists' => 'El rol no existe.',
             'password_confirmation.min' => 'La confirmación de la contraseña debe tener al menos 8 caracteres.',
             'password_confirmation.same' => 'La confirmación de la contraseña no coincide con la contraseña.',
+            'roles.required' => 'Al menos debe seleccionar un rol.',
         ];
     }
 }

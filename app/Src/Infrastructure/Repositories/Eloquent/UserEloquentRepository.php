@@ -16,7 +16,7 @@ class UserEloquentRepository implements UserRepositoryInterface
      */
     private function toEntity(UserModel $userModel): UserEntity
     {
-        
+
         return UserEntity::fromArray($userModel->toArray());
     }
 
@@ -63,19 +63,13 @@ class UserEloquentRepository implements UserRepositoryInterface
     {
         try {
             // Busca si el modelo ya existe o crea uno nuevo
-            $userModel = $this->model->findOrNew($userEntity->id);
+            $userModel = $this->model->create([
+                'name' => $userEntity->name,
+                'email' => $userEntity->email,
+                'password' => bcrypt($userEntity->password),
+            ]);
 
-            // Mapea los datos desde la entidad al modelo
-            $userModel->name = $userEntity->name;
-            $userModel->email = $userEntity->email;
-
-            // Si es un usuario nuevo, asigna la contraseña
-            if (!$userEntity->id && !empty($userEntity->password)) {
-                $userModel->password = bcrypt($userEntity->password);
-            }
-
-            // Guarda el modelo
-            $userModel->save();
+            $userModel->syncRoles($userEntity->roles);
         } catch (\Exception $e) {
             throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
@@ -89,11 +83,18 @@ class UserEloquentRepository implements UserRepositoryInterface
         } catch (\Exception $e) {
             throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
-        $userModel->name = $userEntity->name;
-        $userModel->email = $userEntity->email;
+        if (!empty($userEntity->name)) {
+            $userModel->name = $userEntity->name;
+        }
+        if (!empty($userEntity->email)) {
+            $userModel->email = $userEntity->email;
+        }
         if (!empty($userEntity->password)) {
             $userModel->password = bcrypt($userEntity->password);
-        }       
+        }
+        if (!empty($userEntity->roles)) {
+            $userModel->syncRoles($userEntity->roles);
+        }
         $userModel->save();
     }
 

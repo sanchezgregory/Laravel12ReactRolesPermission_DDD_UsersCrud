@@ -7,7 +7,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use App\Events\UserUpdated;
 use App\Events\UserDeleted;
 use App\Events\UserCreated;
-use App\Src\Application\Services\Backoffice\CachingServices\CacheKeys\AppCacheKeys;
+use App\Src\Application\Services\Backoffice\CachingServices\AppCacheKeys;
 
 class UserCacheSubscriber
 {
@@ -20,6 +20,7 @@ class UserCacheSubscriber
     {
         $cacheKey = AppCacheKeys::USER_DATA->key($event->userId);
         $this->cacheService->forget($cacheKey);
+        $this->cacheService->forget(AppCacheKeys::USERS_LIST->key(null));
     }
 
     /**
@@ -29,6 +30,7 @@ class UserCacheSubscriber
     {
         $cacheKey = AppCacheKeys::USER_DATA->key($event->userId);
         $this->cacheService->forget($cacheKey);
+        $this->cacheService->forget(AppCacheKeys::USERS_LIST->key(null));
     }
 
     public function handleUserCreate(UserCreated $event): void

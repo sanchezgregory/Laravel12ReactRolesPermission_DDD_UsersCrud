@@ -10,6 +10,6 @@ class DestroyController extends Controller
     public function __invoke(UserServiceInterface $userService, int $id)
     {
         $userService->delete($id);
-        return redirect()->route('admin.users.index')->with('success', 'Usuario eliminado exitosamente.');
+        return redirect()->route('backoffice.users.index')->with('success', 'Usuario eliminado exitosamente.');
     }
 }

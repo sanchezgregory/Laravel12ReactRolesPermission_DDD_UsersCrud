@@ -1,12 +1,12 @@
 <?php
 
-use App\Src\Application\Services\ExceptionService;
 use App\Src\Infrastructure\Exceptions\ExceptionTransformer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Src\Infrastructure\Middleware\HandleAppearance;
 use App\Src\Infrastructure\Middleware\HandleInertiaRequests;
+use App\Src\Infrastructure\Services\ExceptionService;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 
 return Application::configure(basePath: dirname(__DIR__))

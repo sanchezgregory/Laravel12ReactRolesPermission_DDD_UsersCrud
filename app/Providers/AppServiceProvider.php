@@ -5,12 +5,14 @@ namespace App\Providers;
 use App\Src\Application\Services\Backoffice\CachingServices\BaseCacheService;
 use App\Src\Application\Services\Backoffice\CachingServices\UserCachingService;
 use App\Src\Application\Services\Backoffice\UserService;
+use App\Src\Domain\Contracts\RepositoryContracts\RoleRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\UserRepositoryInterface;
 use App\Src\Domain\Contracts\ServiceContracts\UserServiceInterface;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use App\Src\Infrastructure\Handlers\CustomExceptionHandler;
 use App\Src\Infrastructure\Repositories\Eloquent\UserEloquentRepository;
+use App\Src\Infrastructure\Repositories\Eloquent\RoleEloquentRepository;
 
 class AppServiceProvider extends BaseServiceProvider
 {
@@ -30,6 +32,7 @@ class AppServiceProvider extends BaseServiceProvider
 
         // Repositories
         $this->app->bind(UserRepositoryInterface::class, UserEloquentRepository::class);
+        $this->app->bind(RoleRepositoryInterface::class, RoleEloquentRepository::class);
     }
 
     /**

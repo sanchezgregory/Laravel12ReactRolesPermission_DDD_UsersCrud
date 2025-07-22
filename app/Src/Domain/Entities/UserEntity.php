@@ -7,7 +7,7 @@ class UserEntity extends BaseEntity
     public function __construct(
         public ?int $id,
         public string $name,
-        public string $email,
+        public ?string $email,
         public ?string $password,
         public array $roles = []
     ) {}
@@ -17,7 +17,7 @@ class UserEntity extends BaseEntity
         return new static(
             $data['id'] ?? null,
             $data['name'],
-            $data['email'],
+            $data['email'] ?? null,
             $data['password'] ?? null,
             $data['roles'] ?? []
         );
@@ -28,8 +28,8 @@ class UserEntity extends BaseEntity
         return new static(
             $request['id'] ?? null,
             $request['name'],
-            $request['email'],
-            $request['password'],
+            $request['email'] ?? null,
+            $request['password'] ?? null,
             $request['roles'] ?? []
         );
     }
