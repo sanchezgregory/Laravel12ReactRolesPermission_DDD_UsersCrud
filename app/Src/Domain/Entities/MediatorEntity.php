@@ -5,7 +5,7 @@ namespace App\Src\Domain\Entities;
 class MediatorEntity extends BaseEntity
 {
     public function __construct(
-        public int $id,
+        public ?int $id = null,
         public string $name,
         public string $email,
         public int $sessionPriceMinor,
@@ -21,7 +21,7 @@ class MediatorEntity extends BaseEntity
     public static function fromArray(array $data): static
     {
         return new static(
-            id: (int) $data['id'],
+            id: $data['id'] ?? null,
             name: (string) ($data['name'] ?? ''),
             email: (string) ($data['email'] ?? ''),
             sessionPriceMinor: (int) ($data['session_price_minor'] ?? 0),

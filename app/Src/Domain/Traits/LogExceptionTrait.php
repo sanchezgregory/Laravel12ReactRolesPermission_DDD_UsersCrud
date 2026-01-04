@@ -70,7 +70,7 @@ trait LogExceptionTrait
                 $exceptionToLog->getMessage(),
                 $exceptionToLog->getFile(),
                 $exceptionToLog->getLine(),
-                $exceptionToLog->getTraceAsString()
+                $this->formatStackTrace($exceptionToLog->getTrace(), 10)
             );
 
             if ($e->getPrevious() !== null) {
@@ -85,7 +85,7 @@ trait LogExceptionTrait
                     $previous->getMessage(),
                     $previous->getFile(),
                     $previous->getLine(),
-                    $previous->getTraceAsString()
+                    $this->formatStackTrace($previous->getTrace(), 10)
                 );
             }
 
@@ -106,6 +106,39 @@ trait LogExceptionTrait
         } catch (\Exception $logError) {
             Log::error("Error logging detailed exception: " . $logError->getMessage());
         }
+    }
+
+    protected function formatStackTrace(array $trace, int $limit = 10): string
+    {
+        // Si el trace está vacío, es probable que sea un error de compilación/parsing
+        if (empty($trace)) {
+            return "[No stack trace available - This is likely a compilation/parsing error that occurred before code execution]";
+        }
+
+        $result = [];
+        $count = min($limit, count($trace));
+
+        for ($i = 0; $i < $count; $i++) {
+            $frame = $trace[$i];
+            
+            $file = $frame['file'] ?? '[internal function]';
+            $line = $frame['line'] ?? 0;
+            $class = $frame['class'] ?? '';
+            $type = $frame['type'] ?? '';
+            $function = $frame['function'] ?? '';
+            
+            $result[] = sprintf(
+                "#%d %s(%d): %s%s%s()",
+                $i,
+                $file,
+                $line,
+                $class,
+                $type,
+                $function
+            );
+        }
+
+        return implode("\n", $result);
     }
 
     protected function getErrorCode(Throwable $e): string

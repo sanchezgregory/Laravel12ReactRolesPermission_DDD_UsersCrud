@@ -5,12 +5,16 @@ namespace App\Providers;
 use App\Src\Application\Services\Backoffice\CachingServices\BaseCacheService;
 use App\Src\Application\Services\Backoffice\CachingServices\UserCachingService;
 use App\Src\Application\Services\Backoffice\UserService;
+use App\Src\Application\Services\Web\MediatorService;
+use App\Src\Domain\Contracts\RepositoryContracts\MediatorRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\RoleRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\UserRepositoryInterface;
+use App\Src\Domain\Contracts\ServiceContracts\MediatorServiceInterface;
 use App\Src\Domain\Contracts\ServiceContracts\UserServiceInterface;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use App\Src\Infrastructure\Handlers\CustomExceptionHandler;
+use App\Src\Infrastructure\Repositories\Eloquent\MediatorEloquentRepository;
 use App\Src\Infrastructure\Repositories\Eloquent\UserEloquentRepository;
 use App\Src\Infrastructure\Repositories\Eloquent\RoleEloquentRepository;
 use App\Src\Domain\Contracts\ServiceContracts\SessionPaymentServiceInterface;
@@ -18,6 +22,8 @@ use App\Src\Domain\Contracts\RepositoryContracts\SessionPaymentRepositoryInterfa
 use App\Src\Infrastructure\Services\SessionPaymentService;
 use App\Src\Infrastructure\Repositories\Eloquent\SessionPaymentEloquentRepository;
 use App\Src\Infrastructure\Services\PaymentProviders\StripePaymentProvider;
+use App\Src\Domain\Contracts\RepositoryContracts\PaymentProviderResolverInterface;
+use App\Src\Infrastructure\Services\PaymentProviders\PaymentProviderResolver;
 
 class AppServiceProvider extends BaseServiceProvider
 {

@@ -12,7 +12,7 @@ class IndexController extends Controller
     {
         $mediators = $mediatorService->getAll();
 
-        return Inertia::render('Mediators/Index', [
+        return Inertia::render('mediators/Index', [
             'mediators' => array_map(fn($m) => $m->toArray(), $mediators),
         ]);
     }
