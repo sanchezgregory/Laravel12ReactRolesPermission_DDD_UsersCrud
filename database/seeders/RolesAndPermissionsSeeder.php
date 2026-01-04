@@ -18,5 +18,6 @@ class RolesAndPermissionsSeeder extends Seeder
         // create roles
         Role::create(['name' => 'admin']);
         Role::create(['name' => 'user']);
+        Role::create(['name' => 'mediator']);
     }
 }

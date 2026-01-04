@@ -32,6 +32,7 @@ Route::prefix('backoffice')->name('backoffice.')->group(function () {
 });
 
 // Mediators routes | public
+require __DIR__ . '/auth_pages.php';
 require __DIR__ . '/mediators.php';
 
 Route::middleware('auth:sanctum')->group(function () {

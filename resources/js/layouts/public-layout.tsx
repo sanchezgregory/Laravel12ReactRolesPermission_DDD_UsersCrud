@@ -25,13 +25,14 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                         {auth.user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                                        <Avatar className="h-10 w-10">
+                                    <Button variant="ghost" className="relative h-10 w-auto flex items-center gap-2 rounded-full pl-2 pr-4">
+                                        <Avatar className="h-8 w-8">
                                             <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
                                             <AvatarFallback className="bg-primary/10 text-primary">
                                                 {getInitials(auth.user.name)}
                                             </AvatarFallback>
                                         </Avatar>
+                                        <span className="font-medium">Account</span>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-56" align="end" forceMount>

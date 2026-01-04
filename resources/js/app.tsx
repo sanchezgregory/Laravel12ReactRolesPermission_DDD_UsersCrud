@@ -13,6 +13,7 @@ initializeTheme();
 
 const appName = import.meta.env?.VITE_APP_NAME || 'Laravel';
 
+
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),

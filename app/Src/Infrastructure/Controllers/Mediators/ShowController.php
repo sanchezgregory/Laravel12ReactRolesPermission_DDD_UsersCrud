@@ -16,7 +16,7 @@ class ShowController extends Controller
             abort(404, 'Mediador no encontrado');
         }
 
-        return Inertia::render('Mediators/Show', [
+        return Inertia::render('mediators/Show', [
             'mediator' => $mediator->toArray(),
         ]);
     }

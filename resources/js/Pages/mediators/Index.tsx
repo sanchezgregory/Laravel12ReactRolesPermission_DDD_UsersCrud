@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 
 type Mediator = {
@@ -50,48 +50,7 @@ export default function MediatorsIndex({ mediators, auth }: PageProps) {
         );
     }, [q, mediators]);
 
-    const [loadingId, setLoadingId] = useState<number | null>(null);
-
-    async function pay(m: Mediator) {
-        if (!isLoggedIn) {
-            window.location.href = "/login";
-            return;
-        }
-
-        setLoadingId(m.id);
-        try {
-            const res = await fetch("/payments/checkout", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? "",
-                },
-                body: JSON.stringify({
-                    method: "stripe",
-                    mediator_id: m.id,
-                    amount_minor: m.session_price_minor,
-                    currency: m.currency,
-                    topic: `Session with ${m.name}`,
-                    metadata: { source: "mediators_index" },
-                }),
-            });
-
-            if (!res.ok) {
-                const txt = await res.text();
-                throw new Error(txt || "Error creando checkout.");
-            }
-
-            const data = await res.json();
-            if (!data.redirect_url) throw new Error("No se recibió redirect_url del backend.");
-
-            window.location.href = data.redirect_url;
-        } catch (e: any) {
-            alert(e?.message ?? "Error inesperado al iniciar el pago.");
-        } finally {
-            setLoadingId(null);
-        }
-    }
+    // Removed unused payment logic defined in Index previously.
 
     return (
         <PublicLayout>
@@ -135,45 +94,25 @@ export default function MediatorsIndex({ mediators, auth }: PageProps) {
                                 </div>
                             </CardHeader>
 
-                            <CardContent className="space-y-6">
+                            <CardContent className="flex flex-col justify-between space-y-6">
                                 <div className="text-sm text-muted-foreground line-clamp-4 leading-relaxed">
                                     {m.bio ?? "Sin biografía disponible."}
                                 </div>
 
-                                <div className="flex items-end justify-between border-t pt-4">
-                                    <div>
-                                        <div className="text-xs text-muted-foreground">Precio por sesión</div>
-                                        <div className="text-xl font-bold text-primary">
-                                            {formatPrice(m.session_price_minor, m.currency)}
+                                <div className="mt-auto space-y-4">
+                                    <div className="flex items-end justify-between border-t pt-4">
+                                        <div>
+                                            <div className="text-xs text-muted-foreground">Precio por sesión</div>
+                                            <div className="text-xl font-bold text-primary">
+                                                {formatPrice(m.session_price_minor, m.currency)}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="w-full"
-                                        disabled={!m.calendly_url}
-                                        onClick={() => {
-                                            if (m.calendly_url) window.open(m.calendly_url, "_blank", "noopener,noreferrer");
-                                        }}
-                                    >
-                                        Ver Calendly
-                                    </Button>
-
-                                    <Button
-                                        type="button"
-                                        className="w-full"
-                                        onClick={() => pay(m)}
-                                        disabled={loadingId === m.id}
-                                    >
-                                        {loadingId === m.id ? "Procesando…" : "Agendar Sesión"}
+                                    <Button asChild className="w-full">
+                                        <Link href={`/mediators/${m.id}`}>Agendar Sesión</Link>
                                     </Button>
                                 </div>
-                                <p className="text-[10px] text-muted-foreground text-center">
-                                    * El agendado se habilita tras el pago.
-                                </p>
                             </CardContent>
                         </Card>
                     ))}
