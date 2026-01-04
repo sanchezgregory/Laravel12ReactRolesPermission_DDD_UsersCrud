@@ -2,6 +2,35 @@
 
 Este proyecto implementa una aplicación web moderna usando Laravel 12 como backend con arquitectura hexagonal DDD, y React con TypeScript como frontend, todo ejecutándose en contenedores Docker con Laravel Sail y gestionado con pnpm.
 
+---
+
+## 📚 Documentación Rápida
+
+### 🎯 DOCUMENTO PRINCIPAL
+
+**[📖 COMPLETE_DOCUMENTATION.md](./COMPLETE_DOCUMENTATION.md)** - **¡TODA LA DOCUMENTACIÓN EN UN SOLO ARCHIVO!**
+- ✅ **4,955 líneas** de documentación completa
+- ✅ **80+ ejemplos** de código
+- ✅ **20+ diagramas** visuales
+- ✅ **10+ plantillas** listas para usar
+- ✅ Navegación por índice maestro
+- ✅ Búsqueda rápida por palabras clave
+
+### 📑 Documentos Individuales (Opcional)
+
+Si prefieres consultar por partes:
+
+| Documento | Descripción | Líneas | Ideal Para |
+|-----------|-------------|--------|------------|
+| [📘 DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | Guía completa de arquitectura hexagonal | 1,968 | Entender el proyecto |
+| [🔄 ARCHITECTURE_FLOWS.md](./ARCHITECTURE_FLOWS.md) | Diagramas y flujos de datos | 853 | Visualizar cómo funciona |
+| [⚡ QUICK_REFERENCE.md](./QUICK_REFERENCE.md) | Plantillas y checklist | 1,500+ | Desarrollar rápido |
+| [🎨 ARCHITECTURE_VISUAL.md](./ARCHITECTURE_VISUAL.md) | Diagramas visuales ASCII | 634 | Ver la arquitectura |
+| [📖 DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) | Índice de navegación | 400+ | Navegar la documentación |
+| [🚀 QUICK_START.md](./QUICK_START.md) | Configuración inicial | 100+ | Primer setup |
+
+---
+
 ## Stack Tecnológico
 
 - **Backend**: Laravel 12 con PHP 8.4
@@ -13,6 +42,7 @@ Este proyecto implementa una aplicación web moderna usando Laravel 12 como back
 - **Arquitectura**: Hexagonal DDD (Domain Driven Design)
 - **Ambiente Local**: Laravel Sail (Docker)
 - **Base de Datos**: PostgreSQL 17
+
 
 ## Estructura del Proyecto
 
@@ -346,6 +376,58 @@ Estos puertos se pueden cambiar en los archivos `.env` y `docker-compose.yml`.
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abrir un Pull Request
+
+## 📚 Documentación del Proyecto
+
+Este proyecto cuenta con documentación completa para facilitar el desarrollo:
+
+### Guías Principales
+
+1. **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Guía completa del desarrollador
+   - Arquitectura Hexagonal explicada en detalle
+   - Estructura de capas (Domain, Application, Infrastructure)
+   - Patrones y conceptos clave (DI, Repository, Decorator)
+   - Guía paso a paso para crear nuevos features
+   - Ejemplos prácticos y mejores prácticas
+   - Troubleshooting común
+
+2. **[ARCHITECTURE_FLOWS.md](./ARCHITECTURE_FLOWS.md)** - Diagramas y flujos
+   - Flujo completo de requests
+   - Flujo de creación de entidades
+   - Capas de validación
+   - Dependency Injection en acción
+   - Patrón Decorator para caché
+   - Manejo de errores y excepciones
+
+3. **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Referencia rápida
+   - Checklist completo para nuevos features
+   - Plantillas de código listas para usar
+   - Comandos útiles (Sail, Artisan, pnpm)
+   - Estructura de archivos
+   - Convenciones de nomenclatura
+
+### Documentación Adicional
+
+- **[QUICK_START.md](./QUICK_START.md)** - Inicio rápido del proyecto
+- **[SAIL_DEVELOPMENT.md](./SAIL_DEVELOPMENT.md)** - Desarrollo con Laravel Sail
+
+### 🎯 Por Dónde Empezar
+
+**¿Eres nuevo en el proyecto?**
+1. Lee [QUICK_START.md](./QUICK_START.md) para configurar el entorno
+2. Revisa [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) para entender la arquitectura
+3. Consulta [ARCHITECTURE_FLOWS.md](./ARCHITECTURE_FLOWS.md) para ver los flujos en acción
+
+**¿Vas a crear un nuevo feature?**
+1. Usa el checklist en [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
+2. Copia las plantillas de código necesarias
+3. Sigue el ejemplo paso a paso en [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)
+
+**¿Necesitas resolver un problema?**
+1. Consulta la sección Troubleshooting en [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)
+2. Revisa los comandos útiles en [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
+
+---
 
 ## Próximos Pasos
 

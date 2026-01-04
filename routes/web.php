@@ -31,8 +31,12 @@ Route::prefix('backoffice')->name('backoffice.')->group(function () {
     });
 });
 
+// Mediators routes | public
+require __DIR__ . '/mediators.php';
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/log-error', LogErrorController::class)->name('api.log.error');
+    require __DIR__ . '/payments_routes.php';
 });
 
 
