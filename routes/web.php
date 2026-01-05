@@ -34,6 +34,7 @@ Route::prefix('backoffice')->name('backoffice.')->group(function () {
 // Mediators routes | public
 require __DIR__ . '/auth_pages.php';
 require __DIR__ . '/mediators.php';
+require __DIR__ . '/payments_webhooks.php';
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/log-error', LogErrorController::class)->name('api.log.error');

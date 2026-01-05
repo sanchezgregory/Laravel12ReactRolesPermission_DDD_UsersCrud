@@ -8,6 +8,9 @@ import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import AppWithErrorBoundary from './components/AppErrorBoundary';
 import { initializeTheme } from './hooks/use-appearance';
+import { route as routeFn } from 'ziggy-js';
+
+(window as any).route = routeFn;
 
 initializeTheme();
 

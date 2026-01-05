@@ -2,7 +2,7 @@ import PublicLayout from "@/layouts/public-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 
@@ -54,45 +54,15 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
         }
     }, []);
 
-    async function pay() {
-        if (!isLoggedIn) {
-            window.location.href = "/login";
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const res = await fetch("/payments/checkout", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? "",
-                },
-                body: JSON.stringify({
-                    method: "stripe",
-                    mediator_id: mediator.id,
-                    amount_minor: mediator.session_price_minor,
-                    currency: mediator.currency,
-                    topic: `Session with ${mediator.name}`,
-                    metadata: { source: "mediator_show" }, // Changed source
-                }),
-            });
-
-            if (!res.ok) {
-                const txt = await res.text();
-                throw new Error(txt || "Error creando checkout.");
-            }
-
-            const data = await res.json();
-            if (!data.redirect_url) throw new Error("No se recibió redirect_url del backend.");
-
-            window.location.href = data.redirect_url;
-        } catch (e: any) {
-            alert(e?.message ?? "Error inesperado al iniciar el pago.");
-        } finally {
-            setLoading(false);
-        }
+    function handlePay() {
+        router.post(route('payments.checkout'), {
+            mediator_id: mediator.id,
+            amount_minor: mediator.session_price_minor,
+            currency: mediator.currency,
+            method: 'stripe',
+            topic: `Session with ${mediator.name}`,
+            metadata: { source: 'mediator_show' },
+        });
     }
 
     return (
@@ -164,7 +134,7 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
                                                 type="button"
                                                 className="w-full text-lg"
                                                 size="lg"
-                                                onClick={pay}
+                                                onClick={handlePay}
                                                 disabled={loading}
                                             >
                                                 {loading ? "Procesando..." : "Pagar Sesión"}

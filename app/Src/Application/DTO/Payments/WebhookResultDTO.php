@@ -2,7 +2,7 @@
 
 namespace App\Src\Application\DTO\Payments;
 
-final readonly class WebhookResultDTO
+readonly class WebhookResultDTO
 {
     public function __construct(
         public bool $handled,

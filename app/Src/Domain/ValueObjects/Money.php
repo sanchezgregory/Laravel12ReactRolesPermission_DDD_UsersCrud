@@ -17,16 +17,16 @@ final readonly class Money implements JsonSerializable
         }
     }
 
-    public static function from(int $amountMinor, Currency $currency): self
+    public static function from(int $amountMinor, string $currency): self
     {
-        return new self($amountMinor, $currency);
+        return new self($amountMinor, Currency::fromString($currency));
     }
 
     public function jsonSerialize(): mixed
     {
         return [
             'amount_minor' => $this->amountMinor,
-            'currency' => $this->currency->value,
+            'currency' => $this->currency,
         ];
     }
 }

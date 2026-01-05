@@ -19,4 +19,9 @@ final readonly class Currency implements Stringable, JsonSerializable
             throw new InvalidArgumentException('Currency must be a 3-letter ISO code.');
         }
     }
+
+    public function jsonSerialize(): mixed
+    {
+        return $this->value;
+    }
 }

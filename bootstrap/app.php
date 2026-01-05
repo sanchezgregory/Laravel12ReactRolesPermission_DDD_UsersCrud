@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Excepciones para las rutas API (no validan csrf tokens)
         $middleware->validateCsrfTokens(except: [
             'api/*',
+            'payments/stripe/webhook',
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);

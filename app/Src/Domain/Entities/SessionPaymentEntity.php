@@ -2,6 +2,7 @@
 
 namespace App\Src\Domain\Entities;
 
+use App\Src\Domain\ValueObjects\Currency;
 use App\Src\Domain\ValueObjects\Money;
 use App\Src\Domain\ValueObjects\PaymentMethod;
 use App\Src\Domain\ValueObjects\PaymentStatus;
@@ -11,6 +12,7 @@ class SessionPaymentEntity extends BaseEntity
     public function __construct(
         public ?int $id,
         public int $userId,
+        public ?string $email,
         public ?int $mediatorId,
         public PaymentMethod $method,
         public PaymentStatus $status,
@@ -28,12 +30,13 @@ class SessionPaymentEntity extends BaseEntity
     {
         $money = Money::from(
             (int) ($data['amount_total'] ?? 0),
-            (string) ($data['currency'] ?? 'USD')
+            Currency::fromString((string) ($data['currency'] ?? 'USD'))
         );
-
+        
         return new static(
             $data['id'] ?? null,
             (int) $data['user_id'],
+            $data['email'] ?? null,
             isset($data['mediator_id']) ? (int) $data['mediator_id'] : null,
             PaymentMethod::fromString((string) ($data['method'] ?? '')),
             PaymentStatus::fromString((string) ($data['status'] ?? PaymentStatus::PENDING)),
@@ -50,6 +53,7 @@ class SessionPaymentEntity extends BaseEntity
         return [
             'id' => $this->id,
             'user_id' => $this->userId,
+            'email' => $this->email,
             'mediator_id' => $this->mediatorId,
             'method' => (string) $this->method,
             'status' => (string) $this->status,

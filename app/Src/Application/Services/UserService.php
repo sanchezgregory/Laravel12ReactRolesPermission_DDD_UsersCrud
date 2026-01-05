@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Src\Application\Services\Backoffice;
+namespace App\Src\Application\Services;
 
 use App\Src\Domain\Contracts\RepositoryContracts\UserRepositoryInterface;
-use App\Src\Domain\Contracts\ServiceContracts\UserServiceInterface;
 use App\Src\Domain\Entities\UserEntity;
 
-class UserService implements UserServiceInterface
+class UserService
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository

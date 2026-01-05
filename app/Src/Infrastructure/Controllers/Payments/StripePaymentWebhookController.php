@@ -6,22 +6,23 @@ use App\Src\Domain\Contracts\ServiceContracts\SessionPaymentServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class PaymentWebhookController
+class StripePaymentWebhookController
 {
     public function __construct(private readonly SessionPaymentServiceInterface $service) {}
 
-    public function __invoke(string $method, Request $request): Response
+    public function __invoke(Request $request): Response
     {
         // Stripe requiere el payload RAW para validar firma
         $payload = $request->getContent();
-
+       
         // Headers normalizados
         $headers = [];
         foreach ($request->headers->all() as $k => $v) {
             $headers[$k] = is_array($v) ? implode(',', $v) : (string) $v;
         }
 
-        $this->service->handleWebhook($method, $payload, $headers);
+        // Handle webhook, updating payment status in DB
+        $this->service->handleWebhook("stripe", $payload, $headers);
 
         return response('ok', 200);
     }

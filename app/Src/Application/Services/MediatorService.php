@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Src\Application\Services\Web;
+namespace App\Src\Application\Services;
 
 use App\Src\Domain\Contracts\RepositoryContracts\MediatorRepositoryInterface;
-use App\Src\Domain\Contracts\ServiceContracts\MediatorServiceInterface;
 use App\Src\Domain\Entities\MediatorEntity;
 
-class MediatorService implements MediatorServiceInterface
+class MediatorService
 {
     public function __construct(private readonly MediatorRepositoryInterface $repository) {}
 

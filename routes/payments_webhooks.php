@@ -1,6 +1,6 @@
 <?php
 
-use App\Src\Infrastructure\Controllers\Payments\PaymentWebhookController;
+use App\Src\Infrastructure\Controllers\Payments\StripePaymentWebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/payments/{method}/webhook', PaymentWebhookController::class)->name('api.payments.webhook');
+Route::post('/payments/stripe/webhook', StripePaymentWebhookController::class)->name('api.payments.webhook');

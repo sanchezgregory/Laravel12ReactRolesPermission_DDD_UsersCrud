@@ -19,7 +19,6 @@ class CreateCheckoutSessionRequest extends FormRequest
             'amount_minor' => ['required', 'integer', 'min:1'],
             'currency' => ['required', 'string', 'size:3'],
             'topic' => ['nullable', 'string', 'max:255'],
-            'metadata' => ['nullable', 'array'],
         ];
     }
 
@@ -30,7 +29,7 @@ class CreateCheckoutSessionRequest extends FormRequest
         ];
     }
 
-    public function toDto(): array
+    public function toArray(): array
     {
         return [
             'user_id' => (int) $this->user()->id,
@@ -39,7 +38,6 @@ class CreateCheckoutSessionRequest extends FormRequest
             'amount_minor' => (int) $this->input('amount_minor'),
             'currency' => (string) $this->input('currency'),
             'topic' => $this->input('topic'),
-            'metadata' => (array) ($this->input('metadata') ?? []),
         ];
     }
 }

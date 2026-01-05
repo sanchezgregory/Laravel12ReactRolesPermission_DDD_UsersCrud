@@ -3,27 +3,18 @@
 namespace App\Providers;
 
 use App\Src\Application\Services\Backoffice\CachingServices\BaseCacheService;
-use App\Src\Application\Services\Backoffice\CachingServices\UserCachingService;
-use App\Src\Application\Services\Backoffice\UserService;
-use App\Src\Application\Services\Web\MediatorService;
+
 use App\Src\Domain\Contracts\RepositoryContracts\MediatorRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\RoleRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\UserRepositoryInterface;
-use App\Src\Domain\Contracts\ServiceContracts\MediatorServiceInterface;
-use App\Src\Domain\Contracts\ServiceContracts\UserServiceInterface;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use App\Src\Infrastructure\Handlers\CustomExceptionHandler;
 use App\Src\Infrastructure\Repositories\Eloquent\MediatorEloquentRepository;
 use App\Src\Infrastructure\Repositories\Eloquent\UserEloquentRepository;
 use App\Src\Infrastructure\Repositories\Eloquent\RoleEloquentRepository;
-use App\Src\Domain\Contracts\ServiceContracts\SessionPaymentServiceInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\SessionPaymentRepositoryInterface;
-use App\Src\Infrastructure\Services\SessionPaymentService;
 use App\Src\Infrastructure\Repositories\Eloquent\SessionPaymentEloquentRepository;
-use App\Src\Infrastructure\Services\PaymentProviders\StripePaymentProvider;
-use App\Src\Domain\Contracts\RepositoryContracts\PaymentProviderResolverInterface;
-use App\Src\Infrastructure\Services\PaymentProviders\PaymentProviderResolver;
 
 class AppServiceProvider extends BaseServiceProvider
 {
@@ -39,25 +30,14 @@ class AppServiceProvider extends BaseServiceProvider
         });
 
         // Decorator and Service
-        $this->decorate(UserServiceInterface::class, UserService::class, UserCachingService::class);
+        // $this->decorate(UserServiceInterface::class, UserService::class, UserCachingService::class);
 
         // Repositories
         $this->app->bind(UserRepositoryInterface::class, UserEloquentRepository::class);
         $this->app->bind(RoleRepositoryInterface::class, RoleEloquentRepository::class);
-        $this->app->bind(SessionPaymentServiceInterface::class, SessionPaymentService::class);
         $this->app->bind(SessionPaymentRepositoryInterface::class, SessionPaymentEloquentRepository::class);
-        $this->app->bind(MediatorServiceInterface::class, MediatorService::class);
         $this->app->bind(MediatorRepositoryInterface::class, MediatorEloquentRepository::class);
 
-        // Providers (Strategy)
-        $this->app->singleton(StripePaymentProvider::class, fn () => new StripePaymentProvider());
-
-        // Resolver (Factory/Registry)
-        $this->app->singleton(PaymentProviderResolverInterface::class, function ($app) {
-            return new PaymentProviderResolver([
-                $app->make(StripePaymentProvider::class),
-            ]);
-        });
     }
 
     /**
