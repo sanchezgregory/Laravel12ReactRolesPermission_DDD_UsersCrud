@@ -19,4 +19,6 @@ interface UserRepositoryInterface
     public function getAll(): array;
 
     public function getUserProfileData(int $userId): array;
+
+    public function getCalendlyUrl(int $userId): ?string;
 }

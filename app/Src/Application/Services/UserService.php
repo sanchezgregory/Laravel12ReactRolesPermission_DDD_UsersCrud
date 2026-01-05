@@ -47,4 +47,9 @@ class UserService
     {
         $this->userRepository->delete($userId);
     }
+
+    public function getCalendlyUrl(int $mediatorId): ?string
+    {
+        return $this->userRepository->getCalendlyUrl($mediatorId);
+    }
 }

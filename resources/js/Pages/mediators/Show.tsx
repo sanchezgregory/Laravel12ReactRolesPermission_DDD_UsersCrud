@@ -2,7 +2,7 @@ import PublicLayout from "@/layouts/public-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Head, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 
@@ -42,19 +42,24 @@ function formatPrice(amountMinor: number, currency: string) {
 }
 
 export default function MediatorShow({ mediator, auth }: PageProps) {
+    const { flash } = usePage<PageProps>().props;
     const isLoggedIn = !!auth?.user;
     const [loading, setLoading] = useState(false);
-    const [hasPaid, setHasPaid] = useState(false);
+    const [calendlyUrl, setCalendlyUrl] = useState<string | null>(mediator.calendly_url ?? null);
 
     // Check query param for payment success
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        if (params.get("success") === "true" || params.get("payment_success") === "1") {
-            setHasPaid(true);
+        const urlFromParams = params.get("calendly_url");
+        if (urlFromParams) {
+            setCalendlyUrl(urlFromParams);
         }
     }, []);
 
+    const showSchedule = !!calendlyUrl;
+
     function handlePay() {
+        setLoading(true);
         router.post(route('payments.checkout'), {
             mediator_id: mediator.id,
             amount_minor: mediator.session_price_minor,
@@ -62,6 +67,8 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
             method: 'stripe',
             topic: `Session with ${mediator.name}`,
             metadata: { source: 'mediator_show' },
+        }, {
+            onFinish: () => setLoading(false)
         });
     }
 
@@ -70,6 +77,15 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
             <Head title={`Mediador - ${mediator.name}`} />
 
             <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
+                {flash?.success && (
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-900/50 dark:bg-green-900/20 dark:text-green-300">
+                        <div className="flex items-center gap-3">
+                            <CheckCircle2 className="h-5 w-5" />
+                            <p className="font-medium">{flash.success}</p>
+                        </div>
+                    </div>
+                )}
+
                 <Card className="overflow-hidden border-border/50 bg-card shadow-lg">
                     <CardHeader className="border-b bg-muted/20 px-6 py-8">
                         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -80,7 +96,7 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
                                     {mediator.headline ?? "Profesional en resolución de conflictos"}
                                 </CardDescription>
                             </div>
-                            {mediator.calendly_url && (
+                            {calendlyUrl && (
                                 <div className="flex flex-col items-center gap-1">
                                     <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider">
                                         Disponible
@@ -110,7 +126,7 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
                                 </div>
 
                                 <div className="space-y-3">
-                                    {hasPaid ? (
+                                    {showSchedule ? (
                                         <>
                                             <div className="flex items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
                                                 <CheckCircle2 className="size-4" />
@@ -120,12 +136,11 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
                                                 type="button"
                                                 className="w-full text-lg"
                                                 size="lg"
-                                                disabled={!mediator.calendly_url}
                                                 onClick={() => {
-                                                    if (mediator.calendly_url) window.open(mediator.calendly_url, "_blank", "noopener,noreferrer");
+                                                    if (calendlyUrl) window.open(calendlyUrl, "_blank", "noopener,noreferrer");
                                                 }}
                                             >
-                                                Agendar en Calendly
+                                                Agendar Sesión
                                             </Button>
                                         </>
                                     ) : (

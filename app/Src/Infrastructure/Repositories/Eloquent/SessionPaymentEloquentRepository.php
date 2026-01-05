@@ -6,6 +6,7 @@ use App\Models\SessionPayment as SessionPaymentModel;
 use App\Src\Domain\Contracts\RepositoryContracts\SessionPaymentRepositoryInterface;
 use App\Src\Domain\Entities\SessionPaymentEntity;
 use App\Src\Infrastructure\Exceptions\RepositoryException;
+use Illuminate\Support\Facades\Log;
 
 class SessionPaymentEloquentRepository implements SessionPaymentRepositoryInterface
 {
@@ -60,5 +61,26 @@ class SessionPaymentEloquentRepository implements SessionPaymentRepositoryInterf
         }
 
         return $this->toEntity($m);
+    }
+
+    public function checkStatusPayment(array $data): ?array
+    {
+        try {
+            $m = $this->model->where('provider_session_id', $data['session_id'])->first();
+
+            if (!$m || $m->status !== 'paid') {
+                return null;
+            }
+
+            Log::info('SessionPaymentEloquentRepository', ['model' => $m->toArray()]);
+
+            return [
+                'paid' => $m->status === 'paid',
+                'mediator' => $m->mediator_id,
+            ];
+
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 }

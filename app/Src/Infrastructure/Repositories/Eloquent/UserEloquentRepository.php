@@ -111,4 +111,9 @@ class UserEloquentRepository implements UserRepositoryInterface
     {
         return $this->model->find($userId)->toArray();
     }
+
+    public function getCalendlyUrl(int $userId): ?string
+    {
+        return $this->model->find($userId)->calendly_url;
+    }
 }

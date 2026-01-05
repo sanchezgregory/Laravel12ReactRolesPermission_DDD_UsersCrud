@@ -13,4 +13,6 @@ interface SessionPaymentRepositoryInterface
     public function save(SessionPaymentEntity $payment): SessionPaymentEntity;
 
     public function update(int $id, SessionPaymentEntity $payment): SessionPaymentEntity;
+
+    public function checkStatusPayment(array $data): ?array;
 }

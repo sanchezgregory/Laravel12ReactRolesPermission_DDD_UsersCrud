@@ -2,13 +2,13 @@
 
 namespace App\Src\Infrastructure\Controllers\Payments;
 
-use App\Src\Domain\Contracts\ServiceContracts\SessionPaymentServiceInterface;
+use App\Src\Infrastructure\Services\StripeSessionPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class StripePaymentWebhookController
 {
-    public function __construct(private readonly SessionPaymentServiceInterface $service) {}
+    public function __construct(private readonly StripeSessionPaymentService $service) {}
 
     public function __invoke(Request $request): Response
     {
