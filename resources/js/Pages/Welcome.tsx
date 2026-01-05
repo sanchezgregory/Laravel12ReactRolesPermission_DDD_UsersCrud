@@ -1,5 +1,6 @@
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
+import AppLogo from '@/components/app-logo';
 
 export default function Welcome() {
     const { auth } = usePage<SharedData>().props;
@@ -23,14 +24,7 @@ export default function Welcome() {
                 {/* Navbar */}
                 <header className="fixed top-0 w-full z-50 transition-all duration-300">
                     <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
-                        {/* Logo */}
-                        <div className="flex items-center gap-3 group cursor-pointer">
-                            <div className="relative w-10 h-10 flex items-center justify-center">
-                                <div className="absolute inset-0 bg-gradient-to-tr from-orange-500 to-red-600 rounded-xl rotate-3 group-hover:rotate-6 transition-transform duration-300 shadow-lg shadow-orange-500/30"></div>
-                                <div className="relative z-10 text-white font-black text-xl tracking-tighter">W</div>
-                            </div>
-                            <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-zinc-400">Whap</span>
-                        </div>
+                        <AppLogo />
 
                         {/* Navigation */}
                         <nav className="flex items-center gap-6">
