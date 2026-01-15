@@ -26,4 +26,9 @@ class SessionPayment extends Model
         'amount_total' => 'integer',
         'metadata' => 'array',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

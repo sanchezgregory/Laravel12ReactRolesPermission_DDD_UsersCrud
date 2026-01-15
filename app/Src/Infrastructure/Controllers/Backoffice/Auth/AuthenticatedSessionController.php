@@ -33,8 +33,8 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $user = Auth::user();
 
-        // Verificamos que el usuario tenga al menos el rol 'regular' o 'admin'
-        if (!$user->hasAnyRole(['admin'])) {
+        // Verificamos que el usuario tenga al menos el rol 'admin' o 'mediator'
+        if (!$user->hasAnyRole(['admin', 'mediator'])) {
             Auth::logout(); // Cerramos la sesión recién creada
 
             // Devolvemos un error de validación personalizado

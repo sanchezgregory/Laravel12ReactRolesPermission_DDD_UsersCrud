@@ -83,4 +83,32 @@ class SessionPaymentEloquentRepository implements SessionPaymentRepositoryInterf
             throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
     }
+
+    public function getByMediatorId(int $mediatorId): array
+    {
+        try {
+            $models = $this->model->with('user')->where('mediator_id', $mediatorId)->orderBy('created_at', 'desc')->get();
+            return $models->map(function ($m) {
+                $arr = $m->toArray();
+                $arr['client_name'] = $m->user ? $m->user->name : null;
+                $arr['email'] = $m->user ? $m->user->email : null;
+                return SessionPaymentEntity::fromArray($arr);
+            })->toArray();
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    public function getClientsByMediatorId(int $mediatorId): array
+    {
+        try {
+            $userIds = $this->model->where('mediator_id', $mediatorId)
+                ->distinct()
+                ->pluck('user_id');
+
+            return \App\Models\User::whereIn('id', $userIds)->get()->toArray();
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
 }

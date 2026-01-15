@@ -15,4 +15,11 @@ interface SessionPaymentRepositoryInterface
     public function update(int $id, SessionPaymentEntity $payment): SessionPaymentEntity;
 
     public function checkStatusPayment(array $data): ?array;
+
+    /**
+     * @return SessionPaymentEntity[]
+     */
+    public function getByMediatorId(int $mediatorId): array;
+
+    public function getClientsByMediatorId(int $mediatorId): array;
 }

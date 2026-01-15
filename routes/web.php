@@ -26,7 +26,7 @@ Route::prefix('backoffice')->name('backoffice.')->group(function () {
     require __DIR__ . '/backoffice_auth.php';
 
     // Protected routes (require authentication and admin role)
-    Route::middleware('auth.backoffice', 'role:admin')->group(function () {
+    Route::middleware('auth.backoffice', 'role:admin|mediator')->group(function () {
         require __DIR__ . '/backoffice_routes.php';
     });
 });

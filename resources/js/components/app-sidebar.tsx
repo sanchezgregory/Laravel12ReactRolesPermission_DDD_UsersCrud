@@ -2,28 +2,10 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Users, Briefcase } from 'lucide-react';
+import { type NavItem, type User } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, Briefcase, Calendar, Folder, LayoutGrid, Users, DollarSign } from 'lucide-react';
 import AppLogo from './app-logo';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/backoffice/dashboard',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Users',
-        href: '/backoffice/users',
-        icon: Users,
-    },
-    {
-        title: 'Mediators',
-        href: '/backoffice/mediators',
-        icon: Briefcase,
-    },
-];
 
 const footerNavItems: NavItem[] = [
     {
@@ -39,6 +21,55 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props as unknown as { auth: { user: User & { roles: string[] } } };
+    const isAdmin = auth.user.roles.includes('admin');
+    const isMediator = auth.user.roles.includes('mediator');
+
+    let mainNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: '/backoffice/dashboard',
+            icon: LayoutGrid,
+        },
+    ];
+
+    if (isAdmin) {
+        mainNavItems = [
+            ...mainNavItems,
+            {
+                title: 'Users',
+                href: '/backoffice/users',
+                icon: Users,
+            },
+            {
+                title: 'Mediators',
+                href: '/backoffice/mediators',
+                icon: Briefcase,
+            },
+        ];
+    }
+
+    if (isMediator) {
+        mainNavItems = [
+            ...mainNavItems,
+            {
+                title: 'My Clients',
+                href: '/backoffice/my-clients',
+                icon: Users,
+            },
+            {
+                title: 'My Payments',
+                href: '/backoffice/my-payments',
+                icon: DollarSign,
+            },
+            {
+                title: 'My Sessions',
+                href: '/backoffice/my-sessions',
+                icon: Calendar,
+            },
+        ];
+    }
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

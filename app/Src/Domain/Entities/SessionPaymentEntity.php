@@ -13,6 +13,7 @@ class SessionPaymentEntity extends BaseEntity
         public ?int $id,
         public int $userId,
         public ?string $email,
+        public ?string $clientName, // Added
         public ?int $mediatorId,
         public PaymentMethod $method,
         public PaymentStatus $status,
@@ -33,10 +34,11 @@ class SessionPaymentEntity extends BaseEntity
             Currency::fromString((string) ($data['currency'] ?? 'USD'))
         );
         
-        return new static(
+        $entity = new static(
             $data['id'] ?? null,
             (int) $data['user_id'],
             $data['email'] ?? null,
+            $data['client_name'] ?? null, // Added
             isset($data['mediator_id']) ? (int) $data['mediator_id'] : null,
             PaymentMethod::fromString((string) ($data['method'] ?? '')),
             PaymentStatus::fromString((string) ($data['status'] ?? PaymentStatus::PENDING)),
@@ -46,6 +48,22 @@ class SessionPaymentEntity extends BaseEntity
             $data['topic'] ?? null,
             is_array($data['metadata'] ?? null) ? $data['metadata'] : (array) json_decode((string) ($data['metadata'] ?? '[]'), true),
         );
+        
+        // ... dates logic
+        
+        if (isset($data['created_at'])) {
+            $entity->createdAt = $data['created_at'] instanceof \DateTimeImmutable 
+                ? $data['created_at'] 
+                : new \DateTimeImmutable((string)$data['created_at']);
+        }
+
+        if (isset($data['updated_at'])) {
+            $entity->updatedAt = $data['updated_at'] instanceof \DateTimeImmutable 
+                ? $data['updated_at'] 
+                : new \DateTimeImmutable((string)$data['updated_at']);
+        }
+
+        return $entity;
     }
 
     public function toArray(): array
@@ -54,6 +72,7 @@ class SessionPaymentEntity extends BaseEntity
             'id' => $this->id,
             'user_id' => $this->userId,
             'email' => $this->email,
+            'client_name' => $this->clientName, // Added
             'mediator_id' => $this->mediatorId,
             'method' => (string) $this->method,
             'status' => (string) $this->status,
@@ -63,6 +82,7 @@ class SessionPaymentEntity extends BaseEntity
             'provider_payment_intent_id' => $this->providerPaymentIntentId,
             'topic' => $this->topic,
             'metadata' => $this->metadata,
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
         ];
     }
 

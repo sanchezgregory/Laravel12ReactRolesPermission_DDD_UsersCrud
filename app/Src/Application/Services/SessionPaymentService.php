@@ -20,4 +20,14 @@ class SessionPaymentService
     {
         return $this->repo->checkStatusPayment($data);
     }
+
+    public function getByMediatorId(int $mediatorId): array
+    {
+        return $this->repo->getByMediatorId($mediatorId);
+    }
+
+    public function getClientsByMediatorId(int $mediatorId): array
+    {
+        return $this->repo->getClientsByMediatorId($mediatorId);
+    }
 }
