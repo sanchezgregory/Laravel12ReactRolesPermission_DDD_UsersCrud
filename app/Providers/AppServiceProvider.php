@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Src\Application\Services\Backoffice\CachingServices\BaseCacheService;
-
+use App\Src\Application\Services\UserService;
 use App\Src\Domain\Contracts\RepositoryContracts\MediatorRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\RoleRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\UserRepositoryInterface;
@@ -14,6 +14,7 @@ use App\Src\Infrastructure\Repositories\Eloquent\MediatorEloquentRepository;
 use App\Src\Infrastructure\Repositories\Eloquent\UserEloquentRepository;
 use App\Src\Infrastructure\Repositories\Eloquent\RoleEloquentRepository;
 use App\Src\Domain\Contracts\RepositoryContracts\SessionPaymentRepositoryInterface;
+use App\Src\Domain\Contracts\ServiceContracts\UserServiceInterface;
 use App\Src\Infrastructure\Repositories\Eloquent\SessionPaymentEloquentRepository;
 
 class AppServiceProvider extends BaseServiceProvider
@@ -37,6 +38,7 @@ class AppServiceProvider extends BaseServiceProvider
         $this->app->bind(RoleRepositoryInterface::class, RoleEloquentRepository::class);
         $this->app->bind(SessionPaymentRepositoryInterface::class, SessionPaymentEloquentRepository::class);
         $this->app->bind(MediatorRepositoryInterface::class, MediatorEloquentRepository::class);
+        $this->app->bind(UserServiceInterface::class, UserService::class);
 
     }
 

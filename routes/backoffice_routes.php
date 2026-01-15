@@ -26,4 +26,12 @@ Route::middleware(['verified', 'role:admin'])->group(function () {
     Route::get('/users/{id}/edit', EditController::class)->name('users.edit');
     Route::put('/users/{id}', UpdateController::class)->name('users.update');
     Route::delete('/users/{id}', DestroyController::class)->name('users.destroy');
+
+    // Rutas para el CRUD de Mediadores
+    Route::get('/mediators', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\IndexController::class)->name('mediators.index');
+    Route::get('/mediators/create', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\CreateController::class)->name('mediators.create');
+    Route::post('/mediators', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\StoreController::class)->name('mediators.store');
+    Route::get('/mediators/{id}/edit', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\EditController::class)->name('mediators.edit');
+    Route::put('/mediators/{id}', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\UpdateController::class)->name('mediators.update');
+    Route::delete('/mediators/{id}', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\DestroyController::class)->name('mediators.destroy');
 });

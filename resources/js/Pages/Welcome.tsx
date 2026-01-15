@@ -33,7 +33,7 @@ export default function Welcome() {
                                     href={route('mediators.index')}
                                     className="hidden sm:inline-flex items-center justify-center rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2.5 text-sm font-semibold shadow-lg shadow-slate-900/20 hover:scale-105 hover:shadow-xl transition-all duration-300"
                                 >
-                                    Ver mediadores
+                                    Mediadores
                                 </Link>
                             ) : (
                                 <>
@@ -47,7 +47,7 @@ export default function Welcome() {
                                         href={route('mediators.index')}
                                         className="inline-flex items-center justify-center rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2.5 text-sm font-semibold shadow-lg shadow-slate-900/20 hover:scale-105 hover:shadow-xl transition-all duration-300"
                                     >
-                                        Ver mediadores
+                                        Mediadores
                                     </Link>
                                 </>
                             )}
@@ -80,7 +80,7 @@ export default function Welcome() {
                                 href={route('mediators.index')}
                                 className="w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-full bg-gradient-to-r from-orange-600 to-red-600 text-white px-8 py-4 text-lg font-bold shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-1 transition-all duration-300"
                             >
-                                Ver mediadores
+                                Mediadores
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                             </Link>
 

@@ -19,4 +19,21 @@ class MediatorService
     {
         return $this->repository->findById($id);
     }
+
+    public function save(array $data): void
+    {
+        $entity = MediatorEntity::fromArray($data);
+        $this->repository->save($entity);
+    }
+
+    public function update(int $id, array $data): void
+    {
+        $entity = MediatorEntity::fromArray($data);
+        $this->repository->update($id, $entity);
+    }
+
+    public function delete(int $id): void
+    {
+        $this->repository->delete($id);
+    }
 }
