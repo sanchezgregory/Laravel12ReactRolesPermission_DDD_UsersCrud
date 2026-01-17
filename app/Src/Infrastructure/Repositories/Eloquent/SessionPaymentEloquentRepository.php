@@ -111,4 +111,37 @@ class SessionPaymentEloquentRepository implements SessionPaymentRepositoryInterf
             throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
     }
+
+    public function hasActivePayment(int $userId, int $mediatorId): bool
+    {
+        // Check if there is any payment with status 'paid' for this user and mediator
+        return $this->model->where('user_id', $userId)
+            ->where('mediator_id', $mediatorId)
+            ->where('status', 'paid') // Assuming 'paid' is the value for PaymentStatus::PAID (checked in Stripe service)
+            ->exists();
+    }
+
+    public function getActiveSessionsByUserId(int $userId): array
+    {
+        try {
+            // Find payments with status 'paid' for this user
+            $models = $this->model->with('mediator')
+                ->where('user_id', $userId)
+                ->where('status', 'paid')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Transform to Entity or array with extra info
+            return $models->map(function ($m) {
+                $arr = $m->toArray();
+                $arr['mediator_name'] = $m->mediator ? $m->mediator->name : 'Unknown';
+                $arr['mediator_email'] = $m->mediator ? $m->mediator->email : 'Unknown';
+                // Add more mediator details if needed
+                return $arr; // Returning array for simplicity in Inertia
+            })->toArray();
+
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
 }

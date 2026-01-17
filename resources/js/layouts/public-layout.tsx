@@ -8,6 +8,7 @@ import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ReactNode } from 'react';
+import ValidSessionsModal from '@/components/ValidSessionsModal';
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
     const { auth } = usePage<SharedData>().props;
@@ -52,6 +53,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <main className="container mx-auto py-8">
                 {children}
             </main>
+            <ValidSessionsModal />
         </div>
     );
 }

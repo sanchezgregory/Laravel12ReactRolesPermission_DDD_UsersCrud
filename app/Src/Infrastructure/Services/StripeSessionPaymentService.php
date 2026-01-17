@@ -49,6 +49,7 @@ class StripeSessionPaymentService
             id: null,
             userId: $dto->userId,
             email: $user->email,
+            clientName: $user->name,
             mediatorId: $dto->mediatorId,
             method: $method,
             status: $status,
@@ -197,5 +198,44 @@ class StripeSessionPaymentService
             providerSessionId: (string) $session->id,
             raw: $session->toArray()
         );
+    }
+
+    public function syncPaymentStatus(string $providerSessionId): ?array
+    {
+        try {
+            // 1. Retrieve the session from Stripe
+            $session = StripeCheckoutSession::retrieve($providerSessionId);
+            
+            // 2. Find local payment
+            $payment = $this->repo->findByProviderSessionId($providerSessionId);
+            if (!$payment) {
+                Log::warning("Payment not found for provider session: " . $providerSessionId);
+                return null;
+            }
+
+            // 3. Check status
+            if ($session->payment_status === 'paid') {
+                if ($payment->status->value !== PaymentStatus::PAID) {
+                     $paymentIntentId = isset($session->payment_intent) ? (string) $session->payment_intent : null;
+                     $payment->markPaid($paymentIntentId);
+                     $this->repo->update($payment->id, $payment);
+                     Log::info("Payment marked as paid via sync: " . $payment->id);
+                }
+                
+                return [
+                    'paid' => true,
+                    'mediator' => $payment->mediatorId,
+                ];
+            }
+
+            return [
+                'paid' => false,
+                'mediator' => $payment->mediatorId,
+            ];
+
+        } catch (\Exception $e) {
+            Log::error("Error syncing payment status: " . $e->getMessage());
+            return null;
+        }
     }
 }

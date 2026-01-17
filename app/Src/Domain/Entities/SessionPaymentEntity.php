@@ -13,7 +13,7 @@ class SessionPaymentEntity extends BaseEntity
         public ?int $id,
         public int $userId,
         public ?string $email,
-        public ?string $clientName, // Added
+        public ?string $clientName = null, // Added
         public ?int $mediatorId,
         public PaymentMethod $method,
         public PaymentStatus $status,

@@ -22,4 +22,8 @@ interface SessionPaymentRepositoryInterface
     public function getByMediatorId(int $mediatorId): array;
 
     public function getClientsByMediatorId(int $mediatorId): array;
+
+    public function hasActivePayment(int $userId, int $mediatorId): bool;
+
+    public function getActiveSessionsByUserId(int $userId): array;
 }

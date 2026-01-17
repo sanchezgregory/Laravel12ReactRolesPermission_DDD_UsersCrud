@@ -7,8 +7,14 @@ use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
+use App\Src\Application\Services\SessionPaymentService;
+
 class HandleInertiaRequests extends Middleware
 {
+    public function __construct(
+        private readonly SessionPaymentService $sessionPaymentService
+    ) {}
+
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -39,13 +45,20 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
         $flash = $this->getFlashMessages($request);
+        
+        $user = $request->user();
+        $activeSessions = [];
+        if ($user) {
+             $activeSessions = $this->sessionPaymentService->getActiveSessionsByUserId($user->id);
+        }
 
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'active_sessions' => $activeSessions,
             ],
             'flash' => $flash,
             'ziggy' => fn(): array => [

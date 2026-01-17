@@ -11,6 +11,7 @@ class CreateCheckoutSessionController
 
     public function __invoke(CreateCheckoutSessionRequest $request): \Symfony\Component\HttpFoundation\Response
     {
+        \Illuminate\Support\Facades\Log::info('CreateCheckoutSessionController invoked', $request->all());
         $result = $this->service->createCheckout($request->toArray());
 
         return \Inertia\Inertia::location($result->redirectUrl);

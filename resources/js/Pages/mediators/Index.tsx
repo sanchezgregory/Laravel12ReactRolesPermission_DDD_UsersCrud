@@ -38,6 +38,8 @@ function formatPrice(amountMinor: number, currency: string) {
     }
 }
 
+import ActiveSessionsBanner from "@/components/ActiveSessionsBanner";
+
 export default function MediatorsIndex({ mediators, auth }: PageProps) {
     const isLoggedIn = !!auth?.user;
     const [q, setQ] = useState("");
@@ -55,7 +57,7 @@ export default function MediatorsIndex({ mediators, auth }: PageProps) {
     return (
         <PublicLayout>
             <Head title="Mediadores" />
-
+            <ActiveSessionsBanner />
             <div className="mx-auto max-w-6xl space-y-8 px-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>

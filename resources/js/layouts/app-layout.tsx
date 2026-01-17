@@ -3,6 +3,7 @@ import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode } from 'react';
 import { ToastContainer } from 'react-toastify';
+import ValidSessionsModal from '@/components/ValidSessionsModal';
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -24,5 +25,6 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => (
             pauseOnHover
         />
         {children}
+        <ValidSessionsModal />
     </AppLayoutTemplate>
 );

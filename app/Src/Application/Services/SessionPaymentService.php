@@ -30,4 +30,14 @@ class SessionPaymentService
     {
         return $this->repo->getClientsByMediatorId($mediatorId);
     }
+
+    public function hasActivePayment(int $userId, int $mediatorId): bool
+    {
+        return $this->repo->hasActivePayment($userId, $mediatorId);
+    }
+
+    public function getActiveSessionsByUserId(int $userId): array
+    {
+        return $this->repo->getActiveSessionsByUserId($userId);
+    }
 }

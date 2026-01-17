@@ -2,22 +2,37 @@
 
 namespace App\Src\Infrastructure\Controllers\Payments;
 
-use App\Src\Application\Services\SessionPaymentService;
+use App\Src\Infrastructure\Services\StripeSessionPaymentService;
 use App\Src\Application\Services\UserService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 class StripeCheckPaymentController
 {
-    public function __construct(private readonly SessionPaymentService $service, private readonly UserService $userService) {}
+    public function __construct(
+        private readonly StripeSessionPaymentService $service, 
+        private readonly UserService $userService
+    ) {}
 
     public function __invoke(Request $request)
     {
-        $paymentData = $this->service->checkStatusPayment($request->all());
-        Log::info('StripeCheckPaymentController', ['paymentData' => json_encode($paymentData)]);
+        $sessionId = $request->input('session_id');
+        
+        Log::info('Requests: StripeCheckPaymentController', ['session_id' => $sessionId]);
 
-        if (!$paymentData) {
-            return redirect()->route('mediators.index')->with('error', 'Payment failed!');
+        if (!$sessionId) {
+            return redirect()->route('mediators.index')->with('error', 'No session ID provided.');
+        }
+
+        $paymentData = $this->service->syncPaymentStatus((string) $sessionId);
+        Log::info('Response: StripeCheckPaymentController', ['paymentData' => json_encode($paymentData)]);
+
+        if (!$paymentData || !$paymentData['paid']) {
+            // If it's the cancel route or payment not successful
+            if ($request->routeIs('payments.cancel')) {
+                return redirect()->route('mediators.index')->with('info', 'Payment cancelled.');
+            }
+            return redirect()->route('mediators.index')->with('error', 'Payment validation failed or not completed.');
         }
 
         $calendlyUrl = $this->userService->getCalendlyUrl($paymentData['mediator']);

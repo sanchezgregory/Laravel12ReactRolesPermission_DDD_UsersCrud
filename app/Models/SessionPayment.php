@@ -31,4 +31,9 @@ class SessionPayment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function mediator()
+    {
+        return $this->belongsTo(User::class, 'mediator_id');
+    }
 }

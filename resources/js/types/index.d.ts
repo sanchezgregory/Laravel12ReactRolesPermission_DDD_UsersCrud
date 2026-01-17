@@ -3,6 +3,15 @@ import type { Config } from 'ziggy-js';
 
 export interface Auth {
     user: User;
+    active_sessions: Array<{
+        id: number;
+        mediator_id: number;
+        mediator_name: string;
+        mediator_email: string;
+        topic: string;
+        status: string;
+        created_at: string;
+    }>;
 }
 
 export interface BreadcrumbItem {

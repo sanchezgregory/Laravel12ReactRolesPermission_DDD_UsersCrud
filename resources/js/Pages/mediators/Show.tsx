@@ -6,6 +6,8 @@ import { Head, router, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
 type Mediator = {
     id: number;
     name: string;
@@ -19,6 +21,13 @@ type Mediator = {
 
 type PageProps = {
     mediator: Mediator;
+    has_active_payment: boolean;
+    other_active_session?: {
+        id: number;
+        mediator_id: number;
+        mediator_name: string;
+        created_at: string;
+    } | null;
     auth?: {
         user?: {
             id: number;
@@ -41,22 +50,26 @@ function formatPrice(amountMinor: number, currency: string) {
     }
 }
 
-export default function MediatorShow({ mediator, auth }: PageProps) {
+export default function MediatorShow({ mediator, auth, has_active_payment, other_active_session }: PageProps) {
     const { flash } = usePage<PageProps>().props;
     const isLoggedIn = !!auth?.user;
     const [loading, setLoading] = useState(false);
     const [calendlyUrl, setCalendlyUrl] = useState<string | null>(mediator.calendly_url ?? null);
+    const [showSchedule, setShowSchedule] = useState(has_active_payment);
 
     // Check query param for payment success
     useEffect(() => {
+        if (has_active_payment) {
+            setShowSchedule(true);
+        }
+
         const params = new URLSearchParams(window.location.search);
         const urlFromParams = params.get("calendly_url");
         if (urlFromParams) {
             setCalendlyUrl(urlFromParams);
+            setShowSchedule(true);
         }
-    }, []);
-
-    const showSchedule = !!calendlyUrl;
+    }, [has_active_payment]);
 
     function handlePay() {
         setLoading(true);
@@ -68,13 +81,49 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
             topic: `Session with ${mediator.name}`,
             metadata: { source: 'mediator_show' },
         }, {
-            onFinish: () => setLoading(false)
+            onFinish: () => setLoading(false),
+            onError: (errors) => {
+                console.error("Payment Error:", errors);
+                // Force a reload if it's a 409/redirect issue that Inertia didn't catch, 
+                // typically onError catches validation errors.
+                // If it's a server 500, Inertia usually shows a modal.
+                alert("Hubo un error al iniciar el pago. Por favor intenta nuevamente.");
+            }
         });
     }
+
+    const [showWarning, setShowWarning] = useState(!!(other_active_session));
 
     return (
         <PublicLayout>
             <Head title={`Mediador - ${mediator.name}`} />
+
+            <Dialog open={showWarning} onOpenChange={setShowWarning}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Sesión Activa Detectada</DialogTitle>
+                        <DialogDescription className="pt-2">
+                            Ya tienes una sesión pagada y activa con <span className="font-semibold text-foreground">{other_active_session?.mediator_name}</span>.
+                        </DialogDescription>
+                        <DialogDescription>
+                            Para continuar, por favor selecciona la agenda de tu sesión pendiente.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end mt-4">
+                        <Button variant="outline" onClick={() => setShowWarning(false)}>
+                            Cerrar
+                        </Button>
+                        {other_active_session && (
+                            <Button
+                                onClick={() => router.visit(route('mediators.show', other_active_session.mediator_id))}
+                                className="w-full sm:w-auto"
+                            >
+                                Ir a la agenda de {other_active_session.mediator_name}
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
                 {flash?.success && (
@@ -145,15 +194,27 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
                                         </>
                                     ) : (
                                         <>
-                                            <Button
-                                                type="button"
-                                                className="w-full text-lg"
-                                                size="lg"
-                                                onClick={handlePay}
-                                                disabled={loading}
-                                            >
-                                                {loading ? "Procesando..." : "Pagar Sesión"}
-                                            </Button>
+                                            {isLoggedIn ? (
+                                                <Button
+                                                    type="button"
+                                                    className="w-full text-lg"
+                                                    size="lg"
+                                                    onClick={handlePay}
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? "Procesando..." : "Pagar Sesión"}
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    className="w-full text-lg"
+                                                    size="lg"
+                                                    onClick={() => router.get(route('login'))}
+                                                >
+                                                    Inicie sesión
+                                                </Button>
+                                            )}
                                             <p className="text-xs text-muted-foreground text-center px-2">
                                                 Realiza el pago seguro para habilitar el agendamiento.
                                             </p>
@@ -163,8 +224,8 @@ export default function MediatorShow({ mediator, auth }: PageProps) {
                             </div>
                         </div>
                     </CardContent>
-                </Card>
-            </div>
-        </PublicLayout>
+                </Card >
+            </div >
+        </PublicLayout >
     );
 }
