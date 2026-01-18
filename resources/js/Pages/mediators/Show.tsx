@@ -116,11 +116,25 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
 
         // Pre-fill date if already scheduled
         if (current_session?.scheduled_at) {
-            // current_session.scheduled_at is typically UTC from backend, usually ISO string
-            // We need to format it for datetime-local (YYYY-MM-DDTHH:mm)
-            // Assuming backend sends ISO string like 2023-10-10T10:00:00.000000Z
+            // current_session.scheduled_at is typically UTC from backend (e.g., 2026-01-21 12:00:00)
+            // We want to display exactly what is in the DB without timezone conversion.
             const date = new Date(current_session.scheduled_at);
-            setData('scheduled_at', toLocalISOString(date));
+            const pad = (num: number) => num.toString().padStart(2, '0');
+
+            // Use UTC getters to treat the stored time as the "face value" time to display
+            const formatted = (
+                date.getUTCFullYear() +
+                '-' +
+                pad(date.getUTCMonth() + 1) +
+                '-' +
+                pad(date.getUTCDate()) +
+                'T' +
+                pad(date.getUTCHours()) +
+                ':' +
+                pad(date.getUTCMinutes())
+            );
+
+            setData('scheduled_at', formatted);
         }
 
         // If we got the specific error, and we have opened the modal implicitly or explicit user action,

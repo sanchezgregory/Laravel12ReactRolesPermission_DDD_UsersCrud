@@ -43,9 +43,14 @@ export default function MySessions({ sessions }: Props) {
     function formatDateTime(dateString: string | null | undefined) {
         if (!dateString) return '—';
         try {
+            // Force UTC timezone to prevent local browser conversion
             return new Date(dateString).toLocaleString('es-ES', {
-                dateStyle: 'short',
-                timeStyle: 'short',
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'UTC',
             });
         } catch {
             return dateString;
@@ -86,10 +91,10 @@ export default function MySessions({ sessions }: Props) {
                                         <TableCell>
                                             <span
                                                 className={`px-2 py-1 rounded-full text-xs font-semibold ${session.status === 'paid'
-                                                        ? session.scheduled_at
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                                                        : 'bg-gray-100 text-gray-800'
+                                                    ? session.scheduled_at
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                                                    : 'bg-gray-100 text-gray-800'
                                                     }`}
                                             >
                                                 {session.status === 'paid'
