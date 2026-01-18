@@ -24,7 +24,12 @@ type Mediator = {
 
 type PageProps = {
     mediator: Mediator;
-    has_active_payment: boolean;
+    current_session?: {
+        id: number;
+        mediator_id: number;
+        scheduled_at?: string | null;
+        [key: string]: any;
+    } | null;
     other_active_session?: {
         id: number;
         mediator_id: number;
@@ -42,6 +47,10 @@ type PageProps = {
     flash?: {
         success?: string;
     };
+    errors: {
+        error?: string; // Backend error
+        [key: string]: any;
+    };
 };
 
 function formatPrice(amountMinor: number, currency: string) {
@@ -53,15 +62,39 @@ function formatPrice(amountMinor: number, currency: string) {
     }
 }
 
-export default function MediatorShow({ mediator, auth, has_active_payment, other_active_session }: PageProps) {
+function toLocalISOString(date: Date) {
+    const pad = (num: number) => num.toString().padStart(2, '0');
+    return (
+        date.getFullYear() +
+        '-' +
+        pad(date.getMonth() + 1) +
+        '-' +
+        pad(date.getDate()) +
+        'T' +
+        pad(date.getHours()) +
+        ':' +
+        pad(date.getMinutes())
+    );
+}
+
+export default function MediatorShow({ mediator, auth, current_session, other_active_session, errors: serverErrors }: PageProps) {
     const { flash } = usePage<PageProps>().props;
     const isLoggedIn = !!auth?.user;
     const [loading, setLoading] = useState(false);
     const [calendlyUrl, setCalendlyUrl] = useState<string | null>(mediator.calendly_url ?? null);
-    const [showSchedule, setShowSchedule] = useState(has_active_payment);
+
+    // Determine if we show schedule (paid session exists)
+    const hasActivePayment = !!current_session;
+    const isAlreadyScheduled = !!current_session?.scheduled_at;
+
+    const [showSchedule, setShowSchedule] = useState(hasActivePayment);
 
     // Modal for submitting scheduled session
     const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+    // If backend returns the specific "already scheduled" error, treat as already scheduled locally for UI
+    const hasAlreadyScheduledError = serverErrors.error === "No se encontró una sesión pagada pendiente de agendar.";
+    const isReadOnly = isAlreadyScheduled || hasAlreadyScheduledError;
 
     const { data, setData, post, processing, errors, reset } = useForm({
         mediator_id: mediator.id,
@@ -69,9 +102,8 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
         notes: '',
     });
 
-    // Check query param for payment success
     useEffect(() => {
-        if (has_active_payment) {
+        if (hasActivePayment) {
             setShowSchedule(true);
         }
 
@@ -81,7 +113,27 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
             setCalendlyUrl(urlFromParams);
             setShowSchedule(true);
         }
-    }, [has_active_payment]);
+
+        // Pre-fill date if already scheduled
+        if (current_session?.scheduled_at) {
+            // current_session.scheduled_at is typically UTC from backend, usually ISO string
+            // We need to format it for datetime-local (YYYY-MM-DDTHH:mm)
+            // Assuming backend sends ISO string like 2023-10-10T10:00:00.000000Z
+            const date = new Date(current_session.scheduled_at);
+            setData('scheduled_at', toLocalISOString(date));
+        }
+
+        // If we got the specific error, and we have opened the modal implicitly or explicit user action,
+        // we might want to ensure the modal is open or at least state matches.
+        if (hasAlreadyScheduledError) {
+            setShowScheduleModal(true);
+            // If we don't have the date from current_session (e.g. race condition), we can't guess it easily
+            // unless we re-fetch, but typically current_session should be updated on reload.
+            // If Inertia reload didn't update current_session yet, we might be stuck. 
+            // But ShowController logic updates current_session every request.
+        }
+
+    }, [hasActivePayment, current_session, hasAlreadyScheduledError]);
 
     function handlePay() {
         setLoading(true);
@@ -150,21 +202,41 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
                 <DialogContent className="sm:max-w-md">
                     <form onSubmit={handleSubmitSchedule}>
                         <DialogHeader>
-                            <DialogTitle>Registrar Sesión Agendada</DialogTitle>
+                            <DialogTitle>
+                                {isReadOnly ? "Sesión Agendada" : "Registrar Sesión Agendada"}
+                            </DialogTitle>
                             <DialogDescription className="pt-2">
-                                Ingresa la fecha y hora que seleccionaste en Calendly.
+                                {isReadOnly
+                                    ? "Esta sesión ya ha sido agendada."
+                                    : "Ingresa la fecha y hora que seleccionaste en Calendly."}
                             </DialogDescription>
                         </DialogHeader>
 
+                        {/* Display Backend Error explicitly in Red if present */}
+                        {hasAlreadyScheduledError && (
+                            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+                                {serverErrors.error}
+                            </div>
+                        )}
+
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <Label htmlFor="scheduled_at">Fecha y Hora *</Label>
+                                <Label htmlFor="scheduled_at">Fecha y Hora {isReadOnly ? '' : '*'}</Label>
                                 <Input
                                     id="scheduled_at"
                                     type="datetime-local"
                                     value={data.scheduled_at}
+                                    min={!isReadOnly ? toLocalISOString(new Date(Date.now() + 2 * 60 * 60 * 1000)) : undefined}
                                     onChange={(e) => setData('scheduled_at', e.target.value)}
+                                    onClick={(e) => {
+                                        if (!isReadOnly) {
+                                            try {
+                                                (e.target as HTMLInputElement).showPicker();
+                                            } catch (error) { /**/ }
+                                        }
+                                    }}
                                     required
+                                    disabled={isReadOnly}
                                     className="w-full"
                                 />
                                 {errors.scheduled_at && (
@@ -181,14 +253,12 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
                                     placeholder="Agrega cualquier comentario adicional..."
                                     rows={3}
                                     maxLength={500}
+                                    disabled={isReadOnly}
                                     className="w-full resize-none"
                                 />
                                 {errors.notes && (
                                     <p className="text-sm text-red-600">{errors.notes}</p>
                                 )}
-                                <p className="text-xs text-muted-foreground">
-                                    {data.notes.length}/500 caracteres
-                                </p>
                             </div>
                         </div>
 
@@ -199,11 +269,13 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
                                 onClick={() => setShowScheduleModal(false)}
                                 disabled={processing}
                             >
-                                Cancelar
+                                {isReadOnly ? "Cerrar" : "Cancelar"}
                             </Button>
-                            <Button type="submit" disabled={processing}>
-                                {processing ? "Enviando..." : "Confirmar Sesión"}
-                            </Button>
+                            {!isReadOnly && (
+                                <Button type="submit" disabled={processing}>
+                                    {processing ? "Enviando..." : "Confirmar Sesión"}
+                                </Button>
+                            )}
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -269,21 +341,31 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
                                                 type="button"
                                                 className="w-full text-lg"
                                                 size="lg"
+                                                disabled={isReadOnly}
                                                 onClick={() => {
                                                     if (calendlyUrl) window.open(calendlyUrl, "_blank", "noopener,noreferrer");
                                                 }}
                                             >
-                                                Agendar Sesión
+                                                {isReadOnly ? "Sesión ya agendada" : "Agendar Sesión"}
                                             </Button>
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 className="w-full"
                                                 size="lg"
-                                                onClick={() => setShowScheduleModal(true)}
+                                                onClick={() => {
+                                                    // Only calculate default if we don't have a value (or override logic)
+                                                    // But logic says: if isReadOnly, we use stored date.
+                                                    if (!isReadOnly && !data.scheduled_at) {
+                                                        const now = new Date();
+                                                        const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+                                                        setData('scheduled_at', toLocalISOString(oneHourLater));
+                                                    }
+                                                    setShowScheduleModal(true);
+                                                }}
                                             >
                                                 <Calendar className="mr-2 h-4 w-4" />
-                                                Ya agendé mi sesión
+                                                {isReadOnly ? "Ver fecha agendada" : "Ya agendé mi sesión"}
                                             </Button>
                                         </>
                                     ) : (

@@ -40,7 +40,7 @@ Route::group(['middleware' => ['verified']], function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    Route::get('/my-sessions', \App\Src\Infrastructure\Controllers\Backoffice\UserSpace\MySessionsController::class)->name('user.sessions');
+
 
     Route::middleware(['role:mediator'])->group(function () {
         Route::get('/my-clients', \App\Src\Infrastructure\Controllers\Backoffice\MediatorSpace\ClientsController::class)->name('mediator.clients');

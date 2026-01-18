@@ -19,27 +19,25 @@ class ShowController extends Controller
             abort(404, 'Mediador no encontrado');
         }
 
-        $hasActivePayment = false;
+        $currentSession = null;
         $otherActiveSession = null;
 
         if (Auth::check()) {
-            $hasActivePayment = $sessionPaymentService->hasActivePayment(Auth::id(), $id);
-
-            // Check if user has active session with ANOTHER mediator
-            if (!$hasActivePayment) {
-                $activeSessions = $sessionPaymentService->getActiveSessionsByUserId(Auth::id());
-                foreach ($activeSessions as $session) {
-                    if ($session['mediator_id'] !== $id) {
-                        $otherActiveSession = $session;
-                        break; // Just need one to warn
-                    }
+            $activeSessions = $sessionPaymentService->getActiveSessionsByUserId(Auth::id());
+            
+            foreach ($activeSessions as $session) {
+                if ($session['mediator_id'] === $id) {
+                    $currentSession = $session;
+                } else {
+                    // Just need one to warn
+                    $otherActiveSession = $session;
                 }
             }
         }
 
         return Inertia::render('mediators/Show', [
             'mediator' => $mediator->toArray(),
-            'has_active_payment' => $hasActivePayment,
+            'current_session' => $currentSession,
             'other_active_session' => $otherActiveSession,
         ]);
     }

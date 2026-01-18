@@ -28,7 +28,7 @@ export function AppSidebar() {
     let mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
-            href: '/backoffice/dashboard',
+            href: '/mediators',
             icon: LayoutGrid,
         },
     ];
