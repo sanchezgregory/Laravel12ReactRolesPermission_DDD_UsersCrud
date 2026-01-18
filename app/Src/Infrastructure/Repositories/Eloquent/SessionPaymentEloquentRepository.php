@@ -115,9 +115,11 @@ class SessionPaymentEloquentRepository implements SessionPaymentRepositoryInterf
     public function hasActivePayment(int $userId, int $mediatorId): bool
     {
         // Check if there is any payment with status 'paid' for this user and mediator
+        // that hasn't been scheduled yet (scheduled_at is null)
         return $this->model->where('user_id', $userId)
             ->where('mediator_id', $mediatorId)
-            ->where('status', 'paid') // Assuming 'paid' is the value for PaymentStatus::PAID (checked in Stripe service)
+            ->where('status', 'paid')
+            ->whereNull('scheduled_at') // Only sessions pending scheduling
             ->exists();
     }
 
@@ -125,23 +127,46 @@ class SessionPaymentEloquentRepository implements SessionPaymentRepositoryInterf
     {
         try {
             // Find payments with status 'paid' for this user
+            // EXCLUDING those that are scheduled in the past
             $models = $this->model->with('mediator')
                 ->where('user_id', $userId)
                 ->where('status', 'paid')
+                ->where(function ($query) {
+                    $query->whereNull('scheduled_at')
+                          ->orWhere('scheduled_at', '>', now());
+                })
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            // Transform to Entity or array with extra info
-            return $models->map(function ($m) {
-                $arr = $m->toArray();
-                $arr['mediator_name'] = $m->mediator ? $m->mediator->name : 'Unknown';
-                $arr['mediator_email'] = $m->mediator ? $m->mediator->email : 'Unknown';
-                // Add more mediator details if needed
-                return $arr; // Returning array for simplicity in Inertia
-            })->toArray();
+            return $this->transformToSessionArray($models);
 
         } catch (\Exception $e) {
             throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
         }
+    }
+
+    public function getAllSessionsByUserId(int $userId): array
+    {
+        try {
+            $models = $this->model->with('mediator')
+                ->where('user_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return $this->transformToSessionArray($models);
+
+        } catch (\Exception $e) {
+            throw new RepositoryException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    private function transformToSessionArray($models): array
+    {
+        return $models->map(function ($m) {
+            $arr = $m->toArray();
+            $arr['mediator_name'] = $m->mediator ? $m->mediator->name : 'Unknown';
+            $arr['mediator_email'] = $m->mediator ? $m->mediator->email : 'Unknown';
+            return $arr;
+        })->toArray();
     }
 }

@@ -16,12 +16,12 @@ export default function ActiveSessionsBanner() {
         <div className="w-full bg-blue-50 border-b border-blue-100 dark:bg-blue-900/10 dark:border-blue-800">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
-                    <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                    <Link href={route('user.sessions')} className="flex items-center gap-2 text-blue-700 dark:text-blue-300 hover:underline">
                         <AlertCircle className="h-4 w-4" />
                         <span className="font-medium">
                             Tienes {sessionCount} {sessionCount === 1 ? 'sesión activa' : 'sesiones activas'} pendiente{sessionCount !== 1 ? 's' : ''}.
                         </span>
-                    </div>
+                    </Link>
 
                     <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
                         {auth.active_sessions.slice(0, 3).map(session => (

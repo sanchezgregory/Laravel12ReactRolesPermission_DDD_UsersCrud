@@ -3,7 +3,7 @@ import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, Calendar } from 'lucide-react';
 
 interface UserMenuContentProps {
     user: User;
@@ -26,6 +26,12 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                    <Link className="block w-full" href={route('user.sessions')} as="button" prefetch onClick={cleanup}>
+                        <Calendar className="mr-2" />
+                        Mis Sesiones
+                    </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <Link className="block w-full" href={route('backoffice.profile.edit')} as="button" prefetch onClick={cleanup}>
                         <Settings className="mr-2" />

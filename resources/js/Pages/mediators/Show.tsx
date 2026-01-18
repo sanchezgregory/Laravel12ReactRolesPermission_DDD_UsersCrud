@@ -2,9 +2,12 @@ import PublicLayout from "@/layouts/public-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Head, router, usePage } from "@inertiajs/react";
+import { Head, router, usePage, useForm } from "@inertiajs/react";
 import { useState, useEffect } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
@@ -57,6 +60,15 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
     const [calendlyUrl, setCalendlyUrl] = useState<string | null>(mediator.calendly_url ?? null);
     const [showSchedule, setShowSchedule] = useState(has_active_payment);
 
+    // Modal for submitting scheduled session
+    const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        mediator_id: mediator.id,
+        scheduled_at: '',
+        notes: '',
+    });
+
     // Check query param for payment success
     useEffect(() => {
         if (has_active_payment) {
@@ -84,11 +96,18 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
             onFinish: () => setLoading(false),
             onError: (errors) => {
                 console.error("Payment Error:", errors);
-                // Force a reload if it's a 409/redirect issue that Inertia didn't catch, 
-                // typically onError catches validation errors.
-                // If it's a server 500, Inertia usually shows a modal.
                 alert("Hubo un error al iniciar el pago. Por favor intenta nuevamente.");
             }
+        });
+    }
+
+    function handleSubmitSchedule(e: React.FormEvent) {
+        e.preventDefault();
+        post(route('payments.submit-schedule'), {
+            onSuccess: () => {
+                setShowScheduleModal(false);
+                reset();
+            },
         });
     }
 
@@ -98,6 +117,7 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
         <PublicLayout>
             <Head title={`Mediador - ${mediator.name}`} />
 
+            {/* Warning modal for other active sessions */}
             <Dialog open={showWarning} onOpenChange={setShowWarning}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
@@ -122,6 +142,70 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
                             </Button>
                         )}
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Schedule submission modal */}
+            <Dialog open={showScheduleModal} onOpenChange={setShowScheduleModal}>
+                <DialogContent className="sm:max-w-md">
+                    <form onSubmit={handleSubmitSchedule}>
+                        <DialogHeader>
+                            <DialogTitle>Registrar Sesión Agendada</DialogTitle>
+                            <DialogDescription className="pt-2">
+                                Ingresa la fecha y hora que seleccionaste en Calendly.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="scheduled_at">Fecha y Hora *</Label>
+                                <Input
+                                    id="scheduled_at"
+                                    type="datetime-local"
+                                    value={data.scheduled_at}
+                                    onChange={(e) => setData('scheduled_at', e.target.value)}
+                                    required
+                                    className="w-full"
+                                />
+                                {errors.scheduled_at && (
+                                    <p className="text-sm text-red-600">{errors.scheduled_at}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="notes">Notas (opcional)</Label>
+                                <Textarea
+                                    id="notes"
+                                    value={data.notes}
+                                    onChange={(e) => setData('notes', e.target.value)}
+                                    placeholder="Agrega cualquier comentario adicional..."
+                                    rows={3}
+                                    maxLength={500}
+                                    className="w-full resize-none"
+                                />
+                                {errors.notes && (
+                                    <p className="text-sm text-red-600">{errors.notes}</p>
+                                )}
+                                <p className="text-xs text-muted-foreground">
+                                    {data.notes.length}/500 caracteres
+                                </p>
+                            </div>
+                        </div>
+
+                        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setShowScheduleModal(false)}
+                                disabled={processing}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? "Enviando..." : "Confirmar Sesión"}
+                            </Button>
+                        </DialogFooter>
+                    </form>
                 </DialogContent>
             </Dialog>
 
@@ -190,6 +274,16 @@ export default function MediatorShow({ mediator, auth, has_active_payment, other
                                                 }}
                                             >
                                                 Agendar Sesión
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="w-full"
+                                                size="lg"
+                                                onClick={() => setShowScheduleModal(true)}
+                                            >
+                                                <Calendar className="mr-2 h-4 w-4" />
+                                                Ya agendé mi sesión
                                             </Button>
                                         </>
                                     ) : (

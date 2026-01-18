@@ -8,6 +8,6 @@ Route::prefix('payments')->name('payments.')->group(function () {
     Route::post('/checkout', CreateCheckoutSessionController::class)->name('checkout');
 
     // Estas 2 son solo “landing” (NO confirman pago)
-    Route::get('/success', StripeCheckPaymentController::class)->name('success');
+    Route::post('/submit-schedule', \App\Src\Infrastructure\Controllers\Payments\SubmitScheduledSessionController::class)->name('submit-schedule');
     Route::get('/cancel', StripeCheckPaymentController::class)->name('cancel');
 });

@@ -20,11 +20,13 @@ class SessionPayment extends Model
         'provider_payment_intent_id',
         'topic',
         'metadata',
+        'scheduled_at',
     ];
 
     protected $casts = [
         'amount_total' => 'integer',
         'metadata' => 'array',
+        'scheduled_at' => 'datetime',
     ];
 
     public function user()

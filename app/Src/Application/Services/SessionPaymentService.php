@@ -40,4 +40,9 @@ class SessionPaymentService
     {
         return $this->repo->getActiveSessionsByUserId($userId);
     }
+
+    public function getAllSessionsByUserId(int $userId): array
+    {
+        return $this->repo->getAllSessionsByUserId($userId);
+    }
 }
