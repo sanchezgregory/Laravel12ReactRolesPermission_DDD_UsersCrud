@@ -23,6 +23,7 @@ class SessionPaymentEntity extends BaseEntity
         public ?string $topic = null,
         public array $metadata = [],
         public ?\DateTimeImmutable $scheduledAt = null,
+        public ?string $meetingLink = null,
     ) {
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
@@ -48,6 +49,8 @@ class SessionPaymentEntity extends BaseEntity
             $data['provider_payment_intent_id'] ?? null,
             $data['topic'] ?? null,
             is_array($data['metadata'] ?? null) ? $data['metadata'] : (array) json_decode((string) ($data['metadata'] ?? '[]'), true),
+            null, // scheduledAt - set below
+            $data['meeting_link'] ?? null,
         );
         
         if (isset($data['scheduled_at'])) {
@@ -90,6 +93,7 @@ class SessionPaymentEntity extends BaseEntity
             'topic' => $this->topic,
             'metadata' => $this->metadata,
             'scheduled_at' => $this->scheduledAt ? $this->scheduledAt->format('Y-m-d H:i:s') : null,
+            'meeting_link' => $this->meetingLink,
             'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
         ];
     }

@@ -8,6 +8,7 @@ import { CheckCircle2, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SchedulerInput, dateToUtcInputString, dateToLocalInputString } from "@/components/ui/scheduler-input";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
@@ -62,21 +63,6 @@ function formatPrice(amountMinor: number, currency: string) {
     }
 }
 
-function toLocalISOString(date: Date) {
-    const pad = (num: number) => num.toString().padStart(2, '0');
-    return (
-        date.getFullYear() +
-        '-' +
-        pad(date.getMonth() + 1) +
-        '-' +
-        pad(date.getDate()) +
-        'T' +
-        pad(date.getHours()) +
-        ':' +
-        pad(date.getMinutes())
-    );
-}
-
 export default function MediatorShow({ mediator, auth, current_session, other_active_session, errors: serverErrors }: PageProps) {
     const { flash } = usePage<PageProps>().props;
     const isLoggedIn = !!auth?.user;
@@ -116,25 +102,9 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
 
         // Pre-fill date if already scheduled
         if (current_session?.scheduled_at) {
-            // current_session.scheduled_at is typically UTC from backend (e.g., 2026-01-21 12:00:00)
-            // We want to display exactly what is in the DB without timezone conversion.
             const date = new Date(current_session.scheduled_at);
-            const pad = (num: number) => num.toString().padStart(2, '0');
-
-            // Use UTC getters to treat the stored time as the "face value" time to display
-            const formatted = (
-                date.getUTCFullYear() +
-                '-' +
-                pad(date.getUTCMonth() + 1) +
-                '-' +
-                pad(date.getUTCDate()) +
-                'T' +
-                pad(date.getUTCHours()) +
-                ':' +
-                pad(date.getUTCMinutes())
-            );
-
-            setData('scheduled_at', formatted);
+            // Use the shared utility to format UTC "as is"
+            setData('scheduled_at', dateToUtcInputString(date));
         }
 
         // If we got the specific error, and we have opened the modal implicitly or explicit user action,
@@ -236,22 +206,15 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
                                 <Label htmlFor="scheduled_at">Fecha y Hora {isReadOnly ? '' : '*'}</Label>
-                                <Input
+                                <SchedulerInput
                                     id="scheduled_at"
-                                    type="datetime-local"
                                     value={data.scheduled_at}
-                                    min={!isReadOnly ? toLocalISOString(new Date(Date.now() + 2 * 60 * 60 * 1000)) : undefined}
                                     onChange={(e) => setData('scheduled_at', e.target.value)}
-                                    onClick={(e) => {
-                                        if (!isReadOnly) {
-                                            try {
-                                                (e.target as HTMLInputElement).showPicker();
-                                            } catch (error) { /**/ }
-                                        }
-                                    }}
-                                    required
+                                    readOnly={isReadOnly}
                                     disabled={isReadOnly}
                                     className="w-full"
+                                    // min is handled automatically by default (2 hours), but we disable it if readOnly
+                                    min={isReadOnly ? undefined : undefined}
                                 />
                                 {errors.scheduled_at && (
                                     <p className="text-sm text-red-600">{errors.scheduled_at}</p>
@@ -277,6 +240,14 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                         </div>
 
                         <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+                            {isReadOnly && (
+                                <Button
+                                    type="button"
+                                    onClick={() => router.visit(route('user.sessions'))}
+                                >
+                                    Ir a mis sesiones
+                                </Button>
+                            )}
                             <Button
                                 type="button"
                                 variant="outline"
@@ -373,7 +344,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                                     if (!isReadOnly && !data.scheduled_at) {
                                                         const now = new Date();
                                                         const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-                                                        setData('scheduled_at', toLocalISOString(oneHourLater));
+                                                        setData('scheduled_at', dateToLocalInputString(oneHourLater));
                                                     }
                                                     setShowScheduleModal(true);
                                                 }}

@@ -21,6 +21,7 @@ class SessionPayment extends Model
         'topic',
         'metadata',
         'scheduled_at',
+        'meeting_link',
     ];
 
     protected $casts = [

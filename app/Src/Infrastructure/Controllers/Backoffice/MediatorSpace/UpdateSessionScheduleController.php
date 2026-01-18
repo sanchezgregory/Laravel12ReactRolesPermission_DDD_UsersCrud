@@ -17,6 +17,7 @@ class UpdateSessionScheduleController extends Controller
         $validated = $request->validate([
             'session_id' => 'required|integer|exists:session_payments,id',
             'scheduled_at' => 'required|date',
+            'meeting_link' => 'nullable|url',
         ]);
 
         $session = SessionPayment::where('id', $validated['session_id'])
@@ -28,6 +29,7 @@ class UpdateSessionScheduleController extends Controller
         // Update the scheduled_at
         $session->update([
             'scheduled_at' => $validated['scheduled_at'],
+            'meeting_link' => $validated['meeting_link'] ?? null,
             'metadata' => array_merge($session->metadata ?? [], [
                 'rescheduled_by_mediator' => true,
                 'rescheduled_at' => now()->toIso8601String(),

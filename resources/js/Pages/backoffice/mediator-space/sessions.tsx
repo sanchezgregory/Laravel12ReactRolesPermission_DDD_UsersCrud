@@ -9,8 +9,9 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { SchedulerInput, dateToUtcInputString } from '@/components/ui/scheduler-input';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
@@ -25,6 +26,7 @@ interface Session {
     status: string;
     created_at: string;
     scheduled_at?: string | null;
+    meeting_link?: string | null;
 }
 
 interface Props {
@@ -38,6 +40,7 @@ export default function Sessions({ sessions }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         session_id: 0,
         scheduled_at: '',
+        meeting_link: '',
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -61,11 +64,15 @@ export default function Sessions({ sessions }: Props) {
 
     function handleEditClick(session: Session) {
         setEditingSession(session);
+        // Parse date and format using UTC components to display exactly what is in DB
+        const initialDate = session.scheduled_at
+            ? dateToUtcInputString(new Date(session.scheduled_at))
+            : '';
+
         setData({
             session_id: session.id,
-            scheduled_at: session.scheduled_at
-                ? new Date(session.scheduled_at).toISOString().slice(0, 16)
-                : '',
+            scheduled_at: initialDate,
+            meeting_link: session.meeting_link || '',
         });
         setShowEditModal(true);
     }
@@ -112,9 +119,8 @@ export default function Sessions({ sessions }: Props) {
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
                                 <Label htmlFor="edit_scheduled_at">Nueva Fecha y Hora *</Label>
-                                <Input
+                                <SchedulerInput
                                     id="edit_scheduled_at"
-                                    type="datetime-local"
                                     value={data.scheduled_at}
                                     onChange={(e) => setData('scheduled_at', e.target.value)}
                                     required
@@ -122,6 +128,21 @@ export default function Sessions({ sessions }: Props) {
                                 />
                                 {errors.scheduled_at && (
                                     <p className="text-sm text-red-600">{errors.scheduled_at}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="edit_meeting_link">Link de Reunión (Video Call)</Label>
+                                <Input
+                                    id="edit_meeting_link"
+                                    type="url"
+                                    placeholder="https://meet.google.com/..."
+                                    value={data.meeting_link}
+                                    onChange={(e) => setData('meeting_link', e.target.value)}
+                                    className="w-full"
+                                />
+                                {errors.meeting_link && (
+                                    <p className="text-sm text-red-600">{errors.meeting_link}</p>
                                 )}
                             </div>
 
@@ -184,10 +205,10 @@ export default function Sessions({ sessions }: Props) {
                                         <TableCell>
                                             <span
                                                 className={`px-2 py-1 rounded-full text-xs font-semibold ${session.status === 'paid'
-                                                        ? session.scheduled_at
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                                                        : 'bg-gray-100 text-gray-800'
+                                                    ? session.scheduled_at
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                                                    : 'bg-gray-100 text-gray-800'
                                                     }`}
                                             >
                                                 {session.status === 'paid'
@@ -206,6 +227,18 @@ export default function Sessions({ sessions }: Props) {
                                                     {formatDateTime(session.scheduled_at)}
                                                 </span>
                                             </div>
+                                            {session.meeting_link && (
+                                                <div className="mt-1 text-xs">
+                                                    <a
+                                                        href={session.meeting_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:underline flex items-center gap-1"
+                                                    >
+                                                        Link Reunión
+                                                    </a>
+                                                </div>
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {session.scheduled_at && (

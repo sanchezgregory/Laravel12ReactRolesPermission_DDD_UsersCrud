@@ -22,6 +22,7 @@ interface Session {
     status: string;
     created_at: string;
     scheduled_at?: string | null;
+    meeting_link?: string | null;
 }
 
 interface Props {
@@ -115,13 +116,22 @@ export default function MySessions({ sessions }: Props) {
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {session.status === 'paid' && !session.scheduled_at && (
-                                                <Button size="sm" asChild>
-                                                    <Link href={route('mediators.show', session.mediator_id)}>
-                                                        Agendar Ahora <ExternalLink className="ml-2 h-3 w-3" />
-                                                    </Link>
-                                                </Button>
-                                            )}
+                                            <div className="flex justify-end gap-2">
+                                                {session.status === 'paid' && !session.scheduled_at && (
+                                                    <Button size="sm" asChild>
+                                                        <Link href={route('mediators.show', session.mediator_id)}>
+                                                            Agendar Ahora <ExternalLink className="ml-2 h-3 w-3" />
+                                                        </Link>
+                                                    </Button>
+                                                )}
+                                                {session.meeting_link && (
+                                                    <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
+                                                        <a href={session.meeting_link} target="_blank" rel="noopener noreferrer">
+                                                            Unirse a Reunión <ExternalLink className="ml-2 h-3 w-3" />
+                                                        </a>
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
