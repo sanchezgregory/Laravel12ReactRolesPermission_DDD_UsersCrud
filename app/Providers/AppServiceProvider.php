@@ -39,6 +39,7 @@ class AppServiceProvider extends BaseServiceProvider
         $this->app->bind(SessionPaymentRepositoryInterface::class, SessionPaymentEloquentRepository::class);
         $this->app->bind(MediatorRepositoryInterface::class, MediatorEloquentRepository::class);
         $this->app->bind(UserServiceInterface::class, UserService::class);
+        $this->app->bind(\App\Src\Domain\Contracts\RepositoryContracts\PaymentSettingsRepositoryInterface::class, \App\Src\Infrastructure\Repositories\PaymentSettingsEloquentRepository::class);
 
     }
 

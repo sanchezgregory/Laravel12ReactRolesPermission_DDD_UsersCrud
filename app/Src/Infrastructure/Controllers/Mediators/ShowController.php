@@ -11,8 +11,12 @@ use Illuminate\Support\Facades\Auth;
 
 class ShowController extends Controller
 {
-    public function __invoke(int $id, MediatorService $mediatorService, SessionPaymentService $sessionPaymentService)
-    {
+    public function __invoke(
+        int $id, 
+        MediatorService $mediatorService, 
+        SessionPaymentService $sessionPaymentService,
+        \App\Src\Application\Services\PaymentConfigurationService $paymentConfigService
+    ) {
         $mediator = $mediatorService->findById($id);
 
         if (!$mediator) {
@@ -35,10 +39,20 @@ class ShowController extends Controller
             }
         }
 
+        $availablePaymentMethods = [];
+        // Map providers to frontend method names
+        if ($paymentConfigService->canMediatorAcceptPayment($id, 'stripe')) {
+            $availablePaymentMethods[] = 'stripe';
+        }
+        if ($paymentConfigService->canMediatorAcceptPayment($id, 'paypal')) {
+            $availablePaymentMethods[] = 'paypal';
+        }
+
         return Inertia::render('mediators/Show', [
             'mediator' => $mediator->toArray(),
             'current_session' => $currentSession,
             'other_active_session' => $otherActiveSession,
+            'available_payment_methods' => $availablePaymentMethods,
         ]);
     }
 }

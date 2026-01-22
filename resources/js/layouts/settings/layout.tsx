@@ -6,29 +6,48 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: '/backoffice/settings/profile',
-        icon: null,
-    },
-    {
-        title: 'Password',
-        href: '/backoffice/settings/password',
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: '/backoffice/settings/appearance',
-        icon: null,
-    },
-];
+import { usePage } from '@inertiajs/react';
+import { type SharedData } from '@/types';
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth.user.roles?.[0] || ''; // Assuming single role or check array
+
+    const sidebarNavItems: NavItem[] = [
+        {
+            title: 'Profile',
+            href: '/backoffice/settings/profile',
+            icon: null,
+        },
+        {
+            title: 'Password',
+            href: '/backoffice/settings/password',
+            icon: null,
+        },
+        {
+            title: 'Appearance',
+            href: '/backoffice/settings/appearance',
+            icon: null,
+        },
+    ];
+
+    // Check if user has admin role. Adjust check based on your auth structure. 
+    // Usually auth.user.roles is an array of strings if using Spatie/Inertia shared props correctly.
+    const isAdmin = auth.user.roles && auth.user.roles.includes('admin');
+
+    if (isAdmin) {
+        sidebarNavItems.push({
+            title: 'Payments',
+            href: '/backoffice/settings/payments',
+            icon: null,
+        });
+    }
+
     // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
     }
+
 
     const currentPath = window.location.pathname;
 

@@ -8,6 +8,7 @@ use App\Src\Application\DTO\Payments\ProviderCheckoutDTO;
 use App\Src\Application\DTO\Payments\WebhookResultDTO;
 use App\Src\Domain\Contracts\RepositoryContracts\SessionPaymentRepositoryInterface;
 use App\Src\Application\Services\UserService;
+use App\Src\Application\Services\PaymentConfigurationService;
 use App\Src\Domain\Entities\SessionPaymentEntity;
 use App\Src\Domain\ValueObjects\Money;
 use App\Src\Domain\ValueObjects\PaymentMethod;
@@ -22,7 +23,8 @@ class StripeSessionPaymentService
 {
     public function __construct(
         private readonly SessionPaymentRepositoryInterface $repo,
-        private readonly UserService $userService
+        private readonly UserService $userService,
+        private readonly PaymentConfigurationService $paymentConfigService
     ) {}
 
     public function createCheckout(array $data): CreateCheckoutResultDTO
@@ -83,10 +85,6 @@ class StripeSessionPaymentService
         $result = $this->resolveStripeWebhook($provider, $payload, $headers);
         
         if (!$result->handled) {
-            // Not necessarily an exception, just ignored. But user code threw exception.
-            // throw new InvalidArgumentException('Webhook not handled.');
-            // Better to just return if not handled or strict? 
-            // The controller expects void.
             return;
         }
 
@@ -163,6 +161,16 @@ class StripeSessionPaymentService
 
     private function createStripeCheckout(CreateCheckoutDTO $dto, int $paymentId)
     {
+        // 1. Check account
+        $stripeAccountId = $this->paymentConfigService->getProviderAccountId($dto->mediatorId, 'stripe');
+        if (!$stripeAccountId) {
+            throw new \RuntimeException("This mediator cannot accept Stripe payments (Account ID missing).");
+        }
+
+        // 2. Calculate fee
+        $platformFeePercent = $this->paymentConfigService->getEffectivePlatformFeePercent($dto->mediatorId);
+        $applicationFeeAmount = (int) round($dto->amountMinor * ($platformFeePercent / 100));
+
         $successUrl = (string) env('PAYMENTS_SUCCESS_URL', config('app.url') . '/payments/success');
         $cancelUrl  = (string) env('PAYMENTS_CANCEL_URL', config('app.url') . '/payments/cancel');
 
@@ -173,14 +181,19 @@ class StripeSessionPaymentService
             'mediator_id' => $dto->mediatorId ? (string) $dto->mediatorId : '',
         ]);
 
-        $session = StripeCheckoutSession::create([
+        $sessionParams = [
             'mode' => 'payment',
             'success_url' => $successUrl . '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => $cancelUrl,
             'client_reference_id' => (string) $paymentId,
             'customer_email' => $dto->email,
             'metadata' => $metadata,
-
+            'payment_intent_data' => [
+                'application_fee_amount' => $applicationFeeAmount,
+                'transfer_data' => [
+                    'destination' => $stripeAccountId,
+                ],
+            ],
             'line_items' => [[
                 'quantity' => 1,
                 'price_data' => [
@@ -191,7 +204,9 @@ class StripeSessionPaymentService
                     ],
                 ],
             ]],
-        ]);
+        ];
+
+        $session = StripeCheckoutSession::create($sessionParams);
 
         return new ProviderCheckoutDTO(
             redirectUrl: (string) $session->url,
