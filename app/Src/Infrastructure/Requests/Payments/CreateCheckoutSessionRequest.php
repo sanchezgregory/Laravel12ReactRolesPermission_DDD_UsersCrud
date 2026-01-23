@@ -15,7 +15,8 @@ class CreateCheckoutSessionRequest extends FormRequest
     {
         return [
             'mediator_id' => ['nullable', 'integer', 'min:1'],
-            'method' => ['required', 'string', 'max:50'],   // 'stripe'
+            'gateway' => ['required', 'string', 'in:stripe,mercadopago'],
+            'method' => ['required', 'string', 'max:50'],   // 'card', etc.
             'amount_minor' => ['required', 'integer', 'min:1'],
             'currency' => ['required', 'string', 'size:3'],
             'topic' => ['nullable', 'string', 'max:255'],

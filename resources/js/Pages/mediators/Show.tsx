@@ -37,6 +37,7 @@ type PageProps = {
         mediator_name: string;
         created_at: string;
     } | null;
+    available_payment_methods: string[]; // Added
     auth?: {
         user?: {
             id: number;
@@ -63,11 +64,14 @@ function formatPrice(amountMinor: number, currency: string) {
     }
 }
 
-export default function MediatorShow({ mediator, auth, current_session, other_active_session, errors: serverErrors }: PageProps) {
+export default function MediatorShow({ mediator, auth, current_session, other_active_session, available_payment_methods, errors: serverErrors }: PageProps) {
     const { flash } = usePage<PageProps>().props;
     const isLoggedIn = !!auth?.user;
     const [loading, setLoading] = useState(false);
     const [calendlyUrl, setCalendlyUrl] = useState<string | null>(mediator.calendly_url ?? null);
+
+    // Determines if payment modal should be shown
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     // Determine if we show schedule (paid session exists)
     const hasActivePayment = !!current_session;
@@ -107,36 +111,51 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
             setData('scheduled_at', dateToUtcInputString(date));
         }
 
-        // If we got the specific error, and we have opened the modal implicitly or explicit user action,
-        // we might want to ensure the modal is open or at least state matches.
         if (hasAlreadyScheduledError) {
             setShowScheduleModal(true);
-            // If we don't have the date from current_session (e.g. race condition), we can't guess it easily
-            // unless we re-fetch, but typically current_session should be updated on reload.
-            // If Inertia reload didn't update current_session yet, we might be stuck. 
-            // But ShowController logic updates current_session every request.
         }
 
     }, [hasActivePayment, current_session, hasAlreadyScheduledError]);
 
-    function handlePay() {
+    function handlePayClick() {
+        console.log("Methods:", available_payment_methods);
+        if (available_payment_methods.length > 1) {
+            setShowPaymentModal(true);
+        } else if (available_payment_methods.length === 1) {
+            processPayment(available_payment_methods[0]);
+        } else {
+            console.warn("No payment methods available");
+            alert("No hay métodos de pago disponibles en este momento. Por favor contacte al soporte.");
+        }
+    }
+
+    function processPayment(method: string) {
         setLoading(true);
         router.post(route('payments.checkout'), {
             mediator_id: mediator.id,
             amount_minor: mediator.session_price_minor,
             currency: mediator.currency,
-            method: 'stripe',
+            gateway: method, // Use 'gateway' slug. Wait, Controller expects 'gateway' slug, request validation requires it.
+            // Previous code sent 'method: stripe', now we need 'gateway: stripe' or 'mercadopago' and 'method: card'? 
+            // Looking at CreateCheckoutSessionRequest validation: 'gateway' => required, 'method' => required.
+            // So we need to send BOTH. 'method' usually means 'card', 'pix', etc. For stripe/mp checkout usually just 'card' or let provider handle it.
+            method: 'card', // Generic default
             topic: `Session with ${mediator.name}`,
             metadata: { source: 'mediator_show' },
         }, {
-            onFinish: () => setLoading(false),
+            onFinish: () => {
+                setLoading(false);
+                setShowPaymentModal(false);
+            },
             onError: (errors) => {
                 console.error("Payment Error:", errors);
-                alert("Hubo un error al iniciar el pago. Por favor intenta nuevamente.");
+                alert("Hubo un error al iniciar el pago. Revisa los mensajes o intenta nuevamente.");
+                setLoading(false);
             }
         });
     }
 
+    // ... handleSubmitSchedule logic ...
     function handleSubmitSchedule(e: React.FormEvent) {
         e.preventDefault();
         post(route('payments.submit-schedule'), {
@@ -155,6 +174,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
 
             {/* Warning modal for other active sessions */}
             <Dialog open={showWarning} onOpenChange={setShowWarning}>
+                {/* ... existing warning modal content ... */}
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Sesión Activa Detectada</DialogTitle>
@@ -181,8 +201,44 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                 </DialogContent>
             </Dialog>
 
+            {/* Payment Selection Modal */}
+            <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Selecciona el método de pago</DialogTitle>
+                        <DialogDescription>
+                            Elige cómo deseas procesar tu pago seguro.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        {available_payment_methods.map((method) => (
+                            <Button
+                                key={method}
+                                variant="outline"
+                                className="w-full justify-start h-14"
+                                onClick={() => processPayment(method)}
+                                disabled={loading}
+                            >
+                                {method === 'stripe' && (
+                                    <>
+                                        <span className="font-semibold text-lg">Tarjeta de Crédito / Débito (Stripe)</span>
+                                    </>
+                                )}
+                                {method === 'mercadopago' && (
+                                    <>
+                                        <span className="font-semibold text-lg">Mercado Pago / Efectivo</span>
+                                    </>
+                                )}
+                                {!['stripe', 'mercadopago'].includes(method) && method}
+                            </Button>
+                        ))}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {/* Schedule submission modal */}
             <Dialog open={showScheduleModal} onOpenChange={setShowScheduleModal}>
+                {/* ... existing schedule modal content ... */}
                 <DialogContent className="sm:max-w-md">
                     <form onSubmit={handleSubmitSchedule}>
                         <DialogHeader>
@@ -213,7 +269,6 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                     readOnly={isReadOnly}
                                     disabled={isReadOnly}
                                     className="w-full"
-                                    // min is handled automatically by default (2 hours), but we disable it if readOnly
                                     min={isReadOnly ? undefined : undefined}
                                 />
                                 {errors.scheduled_at && (
@@ -267,6 +322,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
             </Dialog>
 
             <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
+                {/* ... existing header and card structure ... */}
                 {flash?.success && (
                     <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-900/50 dark:bg-green-900/20 dark:text-green-300">
                         <div className="flex items-center gap-3">
@@ -278,6 +334,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
 
                 <Card className="overflow-hidden border-border/50 bg-card shadow-lg">
                     <CardHeader className="border-b bg-muted/20 px-6 py-8">
+                        {/* ... */}
                         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div className="space-y-2 text-center sm:text-left">
                                 <Badge variant="outline" className="mb-2">Mediador Certificado</Badge>
@@ -318,6 +375,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                 <div className="space-y-3">
                                     {showSchedule ? (
                                         <>
+                                            {/* ... existing schedule buttons ... */}
                                             <div className="flex items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
                                                 <CheckCircle2 className="size-4" />
                                                 <span className="font-medium">Pago realizado</span>
@@ -360,7 +418,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                                     type="button"
                                                     className="w-full text-lg"
                                                     size="lg"
-                                                    onClick={handlePay}
+                                                    onClick={handlePayClick} // Use new handler
                                                     disabled={loading}
                                                 >
                                                     {loading ? "Procesando..." : "Pagar Sesión"}

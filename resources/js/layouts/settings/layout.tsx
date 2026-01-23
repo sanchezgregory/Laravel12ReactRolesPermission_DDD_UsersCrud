@@ -37,6 +37,12 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
     if (isAdmin) {
         sidebarNavItems.push({
+            title: 'Gateways',
+            href: '/backoffice/settings/gateways',
+            icon: null,
+        });
+
+        sidebarNavItems.push({
             title: 'Payments',
             href: '/backoffice/settings/payments',
             icon: null,

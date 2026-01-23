@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'payments/stripe/webhook',
             'payments/stripe/success',
             'payments/stripe/cancel',
+            'webhooks/payments/mercadopago',
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);

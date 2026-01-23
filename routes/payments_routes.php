@@ -11,4 +11,5 @@ Route::prefix('payments')->name('payments.')->group(function () {
     Route::post('/submit-schedule', \App\Src\Infrastructure\Controllers\Payments\SubmitScheduledSessionController::class)->name('submit-schedule')->middleware('auth:sanctum');
     Route::get('/success', StripeCheckPaymentController::class)->name('success');
     Route::get('/cancel', StripeCheckPaymentController::class)->name('cancel');
+    Route::get('/pending', StripeCheckPaymentController::class)->name('pending');
 });

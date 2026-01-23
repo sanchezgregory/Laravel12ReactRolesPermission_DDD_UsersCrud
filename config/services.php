@@ -42,4 +42,8 @@ return [
         'api_version' => env('STRIPE_API_VERSION', '2024-xx-xx'),
     ],
 
+    'mercadopago' => [
+        'token' => env('MERCADOPAGO_ACCESS_TOKEN'),
+        'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
+    ],
 ];

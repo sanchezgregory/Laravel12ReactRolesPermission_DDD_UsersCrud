@@ -2,7 +2,7 @@
 
 namespace App\Src\Infrastructure\Controllers\Payments;
 
-use App\Src\Infrastructure\Services\StripeSessionPaymentService;
+use App\Src\Infrastructure\Services\GeneralSessionPaymentService;
 use App\Src\Application\Services\UserService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -10,13 +10,13 @@ use Illuminate\Http\Request;
 class StripeCheckPaymentController
 {
     public function __construct(
-        private readonly StripeSessionPaymentService $service, 
+        private readonly GeneralSessionPaymentService $service, 
         private readonly UserService $userService
     ) {}
 
     public function __invoke(Request $request)
     {
-        $sessionId = $request->input('session_id');
+        $sessionId = $request->input('session_id') ?? $request->input('preference_id');
         
         Log::info('Requests: StripeCheckPaymentController', ['session_id' => $sessionId]);
 

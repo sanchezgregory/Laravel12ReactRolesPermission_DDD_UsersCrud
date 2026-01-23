@@ -33,19 +33,31 @@ class ShowController extends Controller
                 if ($session['mediator_id'] === $id) {
                     $currentSession = $session;
                 } else {
-                    // Just need one to warn
                     $otherActiveSession = $session;
                 }
             }
         }
 
+        // Get active gateways from DB
+        $activeGateways = \Illuminate\Support\Facades\DB::table('payment_gateways')
+            ->where('is_active', true)
+            ->pluck('slug')
+            ->toArray();
+
         $availablePaymentMethods = [];
-        // Map providers to frontend method names
-        if ($paymentConfigService->canMediatorAcceptPayment($id, 'stripe')) {
-            $availablePaymentMethods[] = 'stripe';
-        }
-        if ($paymentConfigService->canMediatorAcceptPayment($id, 'paypal')) {
-            $availablePaymentMethods[] = 'paypal';
+        
+        foreach ($activeGateways as $slug) {
+            if ($slug === 'stripe') {
+                // Stripe requires Mediator connect account
+                if ($paymentConfigService->canMediatorAcceptPayment($id, 'stripe')) {
+                    $availablePaymentMethods[] = 'stripe';
+                }
+            } elseif ($slug === 'mercadopago') {
+                // Mercado Pago (MVP): Assumes platform account or generic setup.
+                // If you want to enforce mediator config for MP later, add check here.
+                // For now, if active globally, it's available.
+                $availablePaymentMethods[] = 'mercadopago';
+            }
         }
 
         return Inertia::render('mediators/Show', [

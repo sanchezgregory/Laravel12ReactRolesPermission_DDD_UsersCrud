@@ -24,3 +24,6 @@ Route::put('settings/password', [PasswordController::class, 'update'])->name('pa
 Route::get('settings/appearance', function () {
     return Inertia::render('settings/appearance');
 })->name('appearance');
+
+Route::get('settings/gateways', [\App\Src\Infrastructure\Controllers\Backoffice\Settings\GatewaySettingsController::class, 'index'])->name('settings.gateways');
+Route::put('settings/gateways/{slug}', [\App\Src\Infrastructure\Controllers\Backoffice\Settings\GatewaySettingsController::class, 'update'])->name('settings.gateways.update');
