@@ -8,6 +8,7 @@ use App\Src\Domain\Contracts\RepositoryContracts\MediatorRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\RoleRepositoryInterface;
 use App\Src\Domain\Contracts\RepositoryContracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use App\Src\Infrastructure\Handlers\CustomExceptionHandler;
 use App\Src\Infrastructure\Repositories\Eloquent\MediatorEloquentRepository;
@@ -48,6 +49,9 @@ class AppServiceProvider extends BaseServiceProvider
      */
     public function boot(): void
     {
+        if (str_contains(config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
         Vite::prefetch(concurrency: 3);
     }
 }

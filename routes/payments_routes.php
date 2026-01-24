@@ -1,15 +1,15 @@
 <?php
 
 use App\Src\Infrastructure\Controllers\Payments\CreateCheckoutSessionController;
-use App\Src\Infrastructure\Controllers\Payments\StripeCheckPaymentController;
+use App\Src\Infrastructure\Controllers\Payments\PaymentReturnController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('payments')->name('payments.')->group(function () {
     Route::post('/checkout', CreateCheckoutSessionController::class)->name('checkout')->middleware('auth:sanctum');
 
-    // Estas 2 son solo “landing” (NO confirman pago)
+    // Payment return URLs - Gateway agnostic (works for Stripe, MercadoPago, etc.)
     Route::post('/submit-schedule', \App\Src\Infrastructure\Controllers\Payments\SubmitScheduledSessionController::class)->name('submit-schedule')->middleware('auth:sanctum');
-    Route::get('/success', StripeCheckPaymentController::class)->name('success');
-    Route::get('/cancel', StripeCheckPaymentController::class)->name('cancel');
-    Route::get('/pending', StripeCheckPaymentController::class)->name('pending');
+    Route::get('/success', PaymentReturnController::class)->name('success');
+    Route::get('/cancel', PaymentReturnController::class)->name('cancel');
+    Route::get('/pending', PaymentReturnController::class)->name('pending');
 });

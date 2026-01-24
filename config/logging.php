@@ -139,6 +139,15 @@ return [
             'level' => 'debug',
             'days' => 14,
         ],
+        
+        // Payment transactions log - dedicated channel for payment flow tracking
+        'payments' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payments.log'),
+            'level' => 'debug',
+            'days' => 90, // Keep payment logs for 90 days for auditing
+            'replace_placeholders' => true,
+        ],
 
     ],
 

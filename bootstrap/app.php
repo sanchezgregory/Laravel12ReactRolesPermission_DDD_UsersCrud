@@ -25,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/payments/mercadopago',
         ]);
 
+        $middleware->trustProxies(at: '*');
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->alias([

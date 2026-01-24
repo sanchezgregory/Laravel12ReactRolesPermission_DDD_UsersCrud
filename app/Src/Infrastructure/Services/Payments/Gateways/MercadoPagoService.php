@@ -7,6 +7,7 @@ use App\Src\Domain\Entities\SessionPaymentEntity;
 use App\Src\Application\DTO\Payments\ProviderCheckoutDTO;
 use App\Src\Application\DTO\Payments\WebhookResultDTO;
 use App\Src\Domain\ValueObjects\PaymentStatus;
+use App\Src\Infrastructure\Services\Payments\PaymentLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use MercadoPago\MercadoPagoConfig;
@@ -112,49 +113,54 @@ class MercadoPagoService implements PaymentGatewayInterface
 
     public function handleWebhook(Request $request): WebhookResultDTO
     {
-        // Validate HMAC or simple ID check
-        // MP sends notification with topic/type and ID. We need to fetch the payment/merchant_order.
-        
-        $type = $request->input('type');
-        $id = $request->input('data.id'); // or $request->input('id') depending on version
-        
-        // Normalize
-        if (!$id && $request->input('id')) {
-            $id = $request->input('id');
-        }
-        
-        // If getting "topic" => "payment"
-        if ($request->input('topic') === 'payment') {
-             $id = $request->input('id');
-             $type = 'payment';
-        }
-        
-        if ($type === 'payment') {
-            // Need to fetch payment to check status
-            // $payment = \MercadoPago\Client\Payment\PaymentClient::find($id);
-            // hard to do without full implementation, but assuming we fetch it:
-            
-            // Mocking fetch logic for this file since I can't fully implement fetching without Client
-            /*
-            $client = new \MercadoPago\Client\Payment\PaymentClient();
-            $mpPayment = $client->get($id);
-            $status = $mpPayment->status; // approved, pending, rejected
-            $externalRef = $mpPayment->external_reference;
-            */
-            
-            // Returning what we can. The actual status check often requires a sync or IPN callback processing
-            // For now, returning handled = true and data to process later or mock "paid" if simple.
-            // But strict implementation implies fetching.
-            
-            return new WebhookResultDTO(
-                handled: true,
-                eventType: $type,
-                providerSessionId: (string) $id, // this might vary, MP "payment ID" vs "Preference ID". 
-                                                 // Usually we match by external_reference (our Payment ID).
-                status: PaymentStatus::PENDING, // We don't know yet without fetching
-                paymentIntentId: (string) $id,
-                meta: $request->all()
-            );
+        $id = $request->input('data.id') ?? $request->input('id');
+        $type = $request->input('type') ?? $request->input('topic');
+
+        Log::info("MercadoPago Webhook: Type: $type, ID: $id", $request->all());
+
+        if (($type === 'payment' || $type === 'topic_payment') && $id) {
+            try {
+                $client = new \MercadoPago\Client\Payment\PaymentClient();
+                $payment = $client->get($id);
+
+                $status = match ($payment->status) {
+                    'approved' => PaymentStatus::fromString(PaymentStatus::PAID),
+                    'pending', 'in_process', 'in_mediation' => PaymentStatus::fromString(PaymentStatus::PENDING),
+                    'rejected', 'cancelled', 'refunded', 'charged_back' => PaymentStatus::fromString(PaymentStatus::FAILED),
+                    default => PaymentStatus::fromString(PaymentStatus::PENDING),
+                };
+
+                Log::info("MercadoPago Payment Fetched: ID: {$payment->id}, Status: {$payment->status} -> Map: {$status->value}, External Ref: {$payment->external_reference}");
+                
+                PaymentLogger::logPaymentStatusFetched(
+                    gateway: 'mercadopago',
+                    paymentIntentId: (string) $payment->id,
+                    gatewayStatus: $payment->status,
+                    mappedStatus: $status->value,
+                    externalReference: $payment->external_reference
+                );
+
+                return new WebhookResultDTO(
+                    handled: true,
+                    eventType: $type,
+                    providerSessionId: $payment->external_reference, // This matches our SessionPayment->id
+                    status: $status,
+                    paymentIntentId: (string) $payment->id,
+                    meta: (array) $payment
+                );
+
+            } catch (\Exception $e) {
+                Log::error("MercadoPago Webhook Error fetching payment $id: " . $e->getMessage());
+                
+                PaymentLogger::logPaymentError(
+                    context: 'mercadopago_webhook',
+                    message: 'Error fetching payment from MercadoPago',
+                    data: ['payment_id' => $id, 'type' => $type],
+                    exception: $e
+                );
+                
+                return new WebhookResultDTO(handled: true, eventType: $type, providerSessionId: null, status: null);
+            }
         }
 
         return new WebhookResultDTO(handled: true, eventType: $type ?? 'unknown', providerSessionId: null, status: null);
@@ -162,13 +168,35 @@ class MercadoPagoService implements PaymentGatewayInterface
 
     public function syncPayment(SessionPaymentEntity $payment): ?PaymentStatus
     {
-        // For MVP, we rely on Webhooks or if we have payment ID we can check
-        if ($payment->providerPaymentIntentId) {
-             // $client = new \MercadoPago\Client\Payment\PaymentClient();
-             // $mp = $client->get($payment->providerPaymentIntentId);
-             // map status
+        try {
+            // Try to get payment status from MercadoPago
+            // We can use either the providerSessionId (preference_id) or providerPaymentIntentId (payment_id)
+            
+            // If we have the payment intent ID (from webhook), use it directly
+            if ($payment->providerPaymentIntentId) {
+                $client = new \MercadoPago\Client\Payment\PaymentClient();
+                $mpPayment = $client->get($payment->providerPaymentIntentId);
+                
+                $status = match ($mpPayment->status) {
+                    'approved' => PaymentStatus::fromString(PaymentStatus::PAID),
+                    'pending', 'in_process', 'in_mediation' => PaymentStatus::fromString(PaymentStatus::PENDING),
+                    'rejected', 'cancelled', 'refunded', 'charged_back' => PaymentStatus::fromString(PaymentStatus::FAILED),
+                    default => PaymentStatus::fromString(PaymentStatus::PENDING),
+                };
+                
+                Log::info("MercadoPago syncPayment: Payment ID {$mpPayment->id}, Status: {$mpPayment->status} -> {$status->value}");
+                return $status;
+            }
+            
+            // If we only have the preference_id, we can't directly get payment status
+            // Return null to keep current status
+            Log::info("MercadoPago syncPayment: No payment intent ID available for payment {$payment->id}");
+            return null;
+            
+        } catch (\Exception $e) {
+            Log::error("MercadoPago syncPayment error: " . $e->getMessage());
+            return null;
         }
-        return null;
     }
 
     public function refund(string $paymentId): void
