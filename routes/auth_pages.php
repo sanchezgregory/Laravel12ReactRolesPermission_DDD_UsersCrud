@@ -13,5 +13,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthPagesController::class, 'postLogin'])->name('post.login');
     Route::post('/register', [AuthPagesController::class, 'postRegister'])->name('post.register');
     // Redirección para NO usar backend/login
-    Route::redirect('/backend/login', '/login', 302);
+    // Redirección para legacy backoffice login
+    Route::redirect('/backoffice/login', '/login', 301);
 });

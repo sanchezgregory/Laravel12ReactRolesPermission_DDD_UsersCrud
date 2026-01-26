@@ -38,7 +38,7 @@ export default function Welcome() {
                             ) : (
                                 <>
                                     <Link
-                                        href={route('backoffice.login')}
+                                        href={route('login')}
                                         className="hidden sm:block text-sm font-semibold text-slate-600 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-white transition-colors"
                                     >
                                         Iniciar sesión

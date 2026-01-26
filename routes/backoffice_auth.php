@@ -15,10 +15,7 @@ Route::get('register', [RegisteredUserController::class, 'create'])
 
 Route::post('register', [RegisteredUserController::class, 'store']);
 
-Route::get('login', [AuthenticatedSessionController::class, 'create'])
-    ->name('login');
-
-Route::post('login', [AuthenticatedSessionController::class, 'store']);
+// Login unified in /login route
 
 Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
     ->name('password.request');

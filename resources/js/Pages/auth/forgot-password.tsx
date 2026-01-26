@@ -55,7 +55,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                 <div className="space-x-1 text-center text-sm text-muted-foreground">
                     <span>Or, return to</span>
-                    <TextLink href={route('backoffice.login')}>log in</TextLink>
+                    <TextLink href={route('login')}>log in</TextLink>
                 </div>
             </div>
         </AuthLayout>

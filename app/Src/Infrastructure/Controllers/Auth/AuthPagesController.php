@@ -39,17 +39,24 @@ class AuthPagesController extends Controller
         ]);
     }
 
-    public function postLogin(Request $request): RedirectResponse
+    public function postLogin(\App\Src\Infrastructure\Requests\Auth\LoginRequest $request): RedirectResponse
     {
-        $credentials = $request->only('email', 'password');
+        $request->authenticate();
+        $request->session()->regenerate();
 
-        if (Auth::attempt($credentials)) {
-            return redirect()->back()->with('status', 'Login successful');
+        $user = Auth::user();
+        if ($user) {
+            $user->update(['last_login_at' => now()]);
+
+            if ($user->hasAnyRole(['admin', 'mediator'])) {
+                return redirect()->intended(route('backoffice.dashboard'));
+            }
+
+            // Default for end users
+            return redirect()->intended(route('user.sessions'));
         }
 
-        return redirect()->back()->withErrors([
-            'email' => 'Email or password is incorrect.',
-        ]);
+        return redirect()->back(); // Fallback, though authenticate() throws if failed
     }
 
     public function postRegister(Request $request): RedirectResponse
@@ -67,7 +74,8 @@ class AuthPagesController extends Controller
         ]);
 
         Auth::login($user);
+        $user->update(['last_login_at' => now()]);
 
-        return redirect()->back()->with('status', 'Register successful');
+        return redirect()->route('user.sessions')->with('status', 'Register successful');
     }
 }

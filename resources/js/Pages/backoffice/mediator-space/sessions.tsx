@@ -27,6 +27,10 @@ interface Session {
     created_at: string;
     scheduled_at?: string | null;
     meeting_link?: string | null;
+    metadata?: {
+        confirmed_by_mediator?: boolean;
+        [key: string]: any;
+    };
 }
 
 interface Props {
@@ -43,6 +47,13 @@ export default function Sessions({ sessions }: Props) {
         meeting_link: '',
     });
 
+    const confirmForm = useForm({
+        meeting_link: '',
+    });
+
+    const [confirmingSessionId, setConfirmingSessionId] = useState<number | null>(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
@@ -54,12 +65,24 @@ export default function Sessions({ sessions }: Props) {
         },
     ];
 
-    function handleConfirm(sessionId: number) {
-        if (confirm('¿Confirmar que la fecha y hora son correctas?')) {
-            post(route('backoffice.mediator.sessions.confirm', sessionId), {
-                preserveScroll: true,
-            });
-        }
+    function handleConfirm(session: Session) {
+        confirmForm.setData('meeting_link', session.meeting_link || '');
+        setConfirmingSessionId(session.id);
+        setShowConfirmModal(true);
+    }
+
+    function submitConfirm(e: React.FormEvent) {
+        e.preventDefault();
+        if (!confirmingSessionId) return;
+
+        confirmForm.post(route('backoffice.mediator.sessions.confirm', confirmingSessionId), {
+            onSuccess: () => {
+                setShowConfirmModal(false);
+                setConfirmingSessionId(null);
+                confirmForm.reset();
+            },
+            preserveScroll: true,
+        });
     }
 
     function handleEditClick(session: Session) {
@@ -104,6 +127,47 @@ export default function Sessions({ sessions }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="My Sessions" />
+
+            {/* Report/Confirm Modal */}
+            <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+                <DialogContent className="sm:max-w-md">
+                    <form onSubmit={submitConfirm}>
+                        <DialogHeader>
+                            <DialogTitle>Confirmar Sesión</DialogTitle>
+                            <DialogDescription>
+                                Por favor ingresa el link de la reunión para confirmar.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <Label htmlFor="confirm_meeting_link">Link de Reunión</Label>
+                            <Input
+                                id="confirm_meeting_link"
+                                type="url"
+                                placeholder="https://meet.google.com/..."
+                                value={confirmForm.data.meeting_link}
+                                onChange={(e) => confirmForm.setData('meeting_link', e.target.value)}
+                                className="w-full mt-2"
+                                required
+                            />
+                            {confirmForm.errors.meeting_link && (
+                                <p className="text-sm text-red-600 mt-1">{confirmForm.errors.meeting_link}</p>
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setShowConfirmModal(false)}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button type="submit" disabled={confirmForm.processing}>
+                                Aceptar
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
             {/* Edit Schedule Modal */}
             <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
@@ -251,13 +315,24 @@ export default function Sessions({ sessions }: Props) {
                                                         <Edit className="h-4 w-4 mr-1" />
                                                         Editar
                                                     </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleConfirm(session.id)}
-                                                    >
-                                                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                                                        Confirmar
-                                                    </Button>
+                                                    {session.metadata?.confirmed_by_mediator ? (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            className="bg-green-100 text-green-800 hover:bg-green-100 cursor-default"
+                                                        >
+                                                            <CheckCircle2 className="h-4 w-4 mr-1" />
+                                                            Confirmado
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleConfirm(session)}
+                                                        >
+                                                            <CheckCircle2 className="h-4 w-4 mr-1" />
+                                                            Confirmar
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             )}
                                         </TableCell>

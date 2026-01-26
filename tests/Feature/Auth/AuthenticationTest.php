@@ -12,7 +12,7 @@ class AuthenticationTest extends TestCase
 
     public function test_login_screen_can_be_rendered(): void
     {
-        $response = $this->get(route('backoffice.login', absolute: false));
+        $response = $this->get(route('login', absolute: false));
 
         $response->assertStatus(200);
     }
@@ -21,20 +21,20 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->post(route('backoffice.login', absolute: false), [
+        $response = $this->post(route('login', absolute: false), [
             'email' => $user->email,
             'password' => 'password',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('backoffice.dashboard', absolute: false));
+        $response->assertRedirect(route('dashboard', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();
 
-        $this->post(route('backoffice.login', absolute: false), [
+        $this->post(route('login', absolute: false), [
             'email' => $user->email,
             'password' => 'wrong-password',
         ]);
@@ -46,9 +46,9 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('backoffice.logout', absolute: false));
+        $response = $this->actingAs($user)->post(route('logout', absolute: false));
 
         $this->assertGuest();
-        $response->assertRedirect(route('backoffice.login', absolute: false));
+        $response->assertRedirect(route('login', absolute: false));
     }
 }

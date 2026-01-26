@@ -65,7 +65,7 @@ class PasswordResetTest extends TestCase
 
             $response
                 ->assertSessionHasNoErrors()
-                ->assertRedirect(route('backoffice.login', absolute: false));
+                ->assertRedirect(route('login', absolute: false));
 
             return true;
         });

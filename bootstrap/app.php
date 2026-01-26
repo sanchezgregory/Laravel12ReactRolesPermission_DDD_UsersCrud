@@ -25,6 +25,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/payments/mercadopago',
         ]);
 
+        $middleware->redirectGuestsTo(fn () => route('login'));
+
+        $middleware->redirectUsersTo(function () {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if ($user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['admin', 'mediator'])) {
+                return route('backoffice.dashboard');
+            }
+            return route('user.sessions');
+        });
+
         $middleware->trustProxies(at: '*');
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
