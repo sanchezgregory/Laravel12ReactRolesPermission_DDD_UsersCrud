@@ -28,20 +28,16 @@ class ConfirmSessionController extends Controller
             ]),
         ]);
 
-        // Send confirmation email to the client
+        // Send confirmation event
         $client = \App\Models\User::find($session->user_id);
         $mediator = Auth::user();
         
-        if ($client && $client->email) {
-            \Illuminate\Support\Facades\Mail::to($client->email)->send(
-                new \App\Mail\SessionConfirmedByMediatorMail(
-                    $client,
-                    $mediator,
-                    $session->scheduled_at,
-                    $session->meeting_link
-                )
-            );
-        }
+        \App\Events\SessionConfirmedByMediator::dispatch(
+            $client,
+            $mediator,
+            $session->scheduled_at,
+            $session->meeting_link
+        );
 
         return back()->with('success', 'Sesión confirmada exitosamente. Se ha enviado un correo al cliente.');
     }

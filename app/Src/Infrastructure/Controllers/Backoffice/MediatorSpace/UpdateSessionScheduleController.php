@@ -41,15 +41,13 @@ class UpdateSessionScheduleController extends Controller
         $client = User::find($session->user_id);
         $mediator = Auth::user();
 
-        // Send email to the client
-        if ($client && $client->email) {
-            Mail::to($client->email)->send(
-                new SessionRescheduledNotificationMail(
-                    $client,
-                    $mediator,
-                    $validated['scheduled_at'],
-                    $oldScheduledAt
-                )
+        // Send email to the client via event
+        if ($client) {
+             \App\Events\SessionRescheduled::dispatch(
+                $client,
+                $mediator,
+                $validated['scheduled_at'],
+                $oldScheduledAt
             );
         }
 

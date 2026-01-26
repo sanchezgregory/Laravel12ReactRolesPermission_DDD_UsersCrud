@@ -58,15 +58,13 @@ class SubmitScheduledSessionController extends Controller
         $mediator = User::find($mediatorId);
         $user = Auth::user();
 
-        // Send email to the mediator
-        if ($mediator && $mediator->email) {
-            Mail::to($mediator->email)->send(
-                new SessionScheduledConfirmationMail(
-                    $mediator,
-                    $user,
-                    $scheduledAt,
-                    $notes
-                )
+        // Send email to the mediator via event
+        if ($mediator) {
+             \App\Events\SessionScheduled::dispatch(
+                $mediator,
+                $user,
+                $scheduledAt,
+                $notes
             );
         }
 
