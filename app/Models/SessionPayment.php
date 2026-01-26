@@ -12,6 +12,7 @@ class SessionPayment extends Model
     protected $fillable = [
         'user_id',
         'mediator_id',
+        'mediator_session_id',
         'method',
         'status',
         'amount_total',
@@ -22,12 +23,14 @@ class SessionPayment extends Model
         'metadata',
         'scheduled_at',
         'meeting_link',
+        'confirmed_at',
     ];
 
     protected $casts = [
         'amount_total' => 'integer',
         'metadata' => 'array',
         'scheduled_at' => 'datetime',
+        'confirmed_at' => 'datetime',
     ];
 
     public function user()
@@ -38,5 +41,10 @@ class SessionPayment extends Model
     public function mediator()
     {
         return $this->belongsTo(User::class, 'mediator_id');
+    }
+
+    public function mediatorSession()
+    {
+        return $this->belongsTo(MediatorSession::class);
     }
 }

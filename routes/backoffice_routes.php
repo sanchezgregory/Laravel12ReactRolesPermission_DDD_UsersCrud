@@ -36,9 +36,7 @@ Route::group(['middleware' => ['verified']], function () {
     });
 
     // SHARED OR MEDIATOR ROUTES will go here
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', \App\Src\Infrastructure\Controllers\Backoffice\DashboardController::class)->name('dashboard');
 
 
 
