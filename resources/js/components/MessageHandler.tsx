@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { debounce } from 'lodash';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast, ToastPosition } from 'react-toastify';
 
 // Define PageProps interface since it's not exported from @inertiajs/react
@@ -42,7 +42,7 @@ const MessageHandler: React.FC = () => {
             </>
         );
     }, []);
-    
+
     const toastConfig = useMemo(() => ({
         position: 'top-right' as ToastPosition,
         autoClose: 7000,
@@ -90,31 +90,44 @@ const MessageHandler: React.FC = () => {
                     toast.error(content, currentToastConfig);
                 }
             };
-            
+
             const debouncedShow = debounce(show, 300);
             debouncedShow();
-            
+
             return debouncedShow;
         },
         [toastConfig, formatErrorMessages]
     );
 
+    const displayedRef = useRef<{ success: string | null, errors: string | null }>({ success: null, errors: null });
+
     useEffect(() => {
         let debouncedFunc: ReturnType<typeof debounce> | null = null;
-        
+
+        // Handle Success
         if (flash?.success) {
-            debouncedFunc = showToast([flash.success], 'success');
+            if (displayedRef.current.success !== flash.success) {
+                debouncedFunc = showToast([flash.success], 'success');
+                displayedRef.current.success = flash.success;
+            }
+        } else {
+            displayedRef.current.success = null;
         }
 
-        if (flash?.error) {
-            debouncedFunc = showToast([flash.error], 'error');
-        }
-
+        // Handle Errors
         const errorMessages = collectErrors();
+        const errorsString = JSON.stringify(errorMessages);
+
         if (errorMessages.length > 0) {
-            debouncedFunc = showToast(errorMessages, 'error');
+            // Only show if the error content has changed
+            if (displayedRef.current.errors !== errorsString) {
+                debouncedFunc = showToast(errorMessages, 'error');
+                displayedRef.current.errors = errorsString;
+            }
+        } else {
+            displayedRef.current.errors = null;
         }
-        
+
         return () => {
             if (debouncedFunc) {
                 debouncedFunc.cancel();

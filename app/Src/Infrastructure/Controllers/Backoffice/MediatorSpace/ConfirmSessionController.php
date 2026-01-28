@@ -19,6 +19,11 @@ class ConfirmSessionController extends Controller
             ->where('mediator_id', Auth::id())
             ->firstOrFail();
 
+        // Check if already confirmed to prevent duplicate emails/actions
+        if (!empty($session->metadata['confirmed_by_mediator'])) {
+            return back()->with('success', 'La sesión ya fue confirmada previamente.');
+        }
+
         // Update metadata to mark as confirmed and save meeting link if provided
         $session->update([
             'meeting_link' => $validated['meeting_link'] ?? $session->meeting_link,

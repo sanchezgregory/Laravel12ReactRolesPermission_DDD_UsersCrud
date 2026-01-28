@@ -28,8 +28,13 @@ export function AppSidebar() {
     let mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
-            href: '/mediators',
+            href: '/backoffice/dashboard',
             icon: LayoutGrid,
+        },
+        {
+            title: 'Mediadores',
+            href: '/mediators',
+            icon: Users,
         },
     ];
 
