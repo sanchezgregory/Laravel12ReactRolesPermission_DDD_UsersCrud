@@ -33,6 +33,14 @@ Route::group(['middleware' => ['verified']], function () {
         Route::get('/mediators/{id}/edit', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\EditController::class)->name('mediators.edit');
         Route::put('/mediators/{id}', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\UpdateController::class)->name('mediators.update');
         Route::delete('/mediators/{id}', \App\Src\Infrastructure\Controllers\Backoffice\Mediators\DestroyController::class)->name('mediators.destroy');
+
+        // Rutas para Cupones
+        Route::get('/coupons', \App\Src\Infrastructure\Controllers\Backoffice\Coupons\IndexController::class)->name('coupons.index');
+        Route::get('/coupons/create', \App\Src\Infrastructure\Controllers\Backoffice\Coupons\CreateController::class)->name('coupons.create');
+        Route::post('/coupons', \App\Src\Infrastructure\Controllers\Backoffice\Coupons\StoreController::class)->name('coupons.store');
+        Route::get('/coupons/{id}/edit', \App\Src\Infrastructure\Controllers\Backoffice\Coupons\EditController::class)->name('coupons.edit');
+        Route::put('/coupons/{id}', \App\Src\Infrastructure\Controllers\Backoffice\Coupons\UpdateController::class)->name('coupons.update');
+        Route::delete('/coupons/{id}', \App\Src\Infrastructure\Controllers\Backoffice\Coupons\DestroyController::class)->name('coupons.destroy');
     });
 
     // SHARED OR MEDIATOR ROUTES will go here

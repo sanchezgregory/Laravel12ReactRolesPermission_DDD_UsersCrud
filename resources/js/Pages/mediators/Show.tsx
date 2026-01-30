@@ -79,6 +79,12 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
 
     const [showSchedule, setShowSchedule] = useState(hasActivePayment);
 
+    // Coupon State
+    const [couponCode, setCouponCode] = useState("");
+    const [couponResult, setCouponResult] = useState<{ valid: boolean, coupon: { code: string, discount_percentage: number }, message: string } | null>(null);
+    const [couponError, setCouponError] = useState<string | null>(null);
+    const [validatingCoupon, setValidatingCoupon] = useState(false);
+
     // Modal for submitting scheduled session
     const [showScheduleModal, setShowScheduleModal] = useState(false);
 
@@ -117,12 +123,52 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
 
     }, [hasActivePayment, current_session, hasAlreadyScheduledError]);
 
+    async function handleValidateCoupon() {
+        setValidatingCoupon(true);
+        setCouponError(null);
+        setCouponResult(null);
+
+        try {
+            const response = await fetch(route('coupons.validate'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ coupon_code: couponCode }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.valid) {
+                setCouponResult(data);
+            } else {
+                setCouponError(data.message || 'Cupón inválido');
+            }
+        } catch (error) {
+            console.error(error);
+            setCouponError('Error al validar el cupón');
+        } finally {
+            setValidatingCoupon(false);
+        }
+    }
+
     function handlePayClick() {
         console.log("Methods:", available_payment_methods);
         if (available_payment_methods.length > 1) {
             setShowPaymentModal(true);
         } else if (available_payment_methods.length === 1) {
-            processPayment(available_payment_methods[0]);
+            // Check if coupon logic is needed even for single method if we want to support coupons
+            // If user has to input coupon, they need the modal.
+            // So if coupons are enabled, we might ALWAYS want to show modal? 
+            // Or only if they explicitly want to add a coupon?
+            // For simplicity, let's open modal if they click pay, or maybe we assume they might want to add coupon.
+            // Current user flow: Click 'Pagar Sesión' -> checks length.
+            // If I want to support coupons, I should probably always open the modal to allow coupon entry, 
+            // OR have a separate 'Have a coupon?' link.
+            // For now, I'll force modal open if single method too, to allow coupon entry.
+            setShowPaymentModal(true);
         } else {
             console.warn("No payment methods available");
             alert("No hay métodos de pago disponibles en este momento. Por favor contacte al soporte.");
@@ -135,13 +181,11 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
             mediator_id: mediator.id,
             amount_minor: mediator.session_price_minor,
             currency: mediator.currency,
-            gateway: method, // Use 'gateway' slug. Wait, Controller expects 'gateway' slug, request validation requires it.
-            // Previous code sent 'method: stripe', now we need 'gateway: stripe' or 'mercadopago' and 'method: card'? 
-            // Looking at CreateCheckoutSessionRequest validation: 'gateway' => required, 'method' => required.
-            // So we need to send BOTH. 'method' usually means 'card', 'pix', etc. For stripe/mp checkout usually just 'card' or let provider handle it.
+            gateway: method,
             method: 'card', // Generic default
             topic: `Session with ${mediator.name}`,
             metadata: { source: 'mediator_show' },
+            coupon_code: couponResult && couponResult?.valid ? couponCode : null,
         }, {
             onFinish: () => {
                 setLoading(false);
@@ -210,6 +254,47 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                             Elige cómo deseas procesar tu pago seguro.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {/* Coupon Section */}
+                    <div className="space-y-2 pt-2">
+                        <Label>¿Tienes un cupón?</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder="Código de cupón"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                disabled={!!couponResult || validatingCoupon}
+                            />
+                            {couponResult ? (
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setCouponResult(null);
+                                        setCouponCode("");
+                                    }}
+                                >
+                                    Quitar
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="secondary"
+                                    onClick={handleValidateCoupon}
+                                    disabled={!couponCode || validatingCoupon}
+                                >
+                                    {validatingCoupon ? "Validando..." : "Aplicar"}
+                                </Button>
+                            )}
+                        </div>
+                        {couponError && <p className="text-sm text-red-500">{couponError}</p>}
+                        {couponResult && (
+                            <div className="rounded-md bg-green-50 p-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                                <p className="font-semibold">¡Cupón aplicado!</p>
+                                <p>{couponResult.coupon.discount_percentage}% de descuento.</p>
+                                <p>Nuevo total: {formatPrice(Math.round(mediator.session_price_minor * (1 - couponResult.coupon.discount_percentage / 100)), mediator.currency)}</p>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="space-y-4 py-4">
                         {available_payment_methods.map((method) => (
                             <Button

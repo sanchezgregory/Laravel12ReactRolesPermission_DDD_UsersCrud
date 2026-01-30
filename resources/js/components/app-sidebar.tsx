@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type User } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Briefcase, Calendar, Folder, LayoutGrid, Users, DollarSign } from 'lucide-react';
+import { BookOpen, Briefcase, Calendar, Folder, LayoutGrid, Users, DollarSign, Ticket } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const footerNavItems: NavItem[] = [
@@ -32,6 +32,11 @@ export function AppSidebar() {
             icon: LayoutGrid,
         },
         {
+            title: 'My Coupons',
+            href: '/backoffice/my-coupons',
+            icon: Ticket,
+        },
+        {
             title: 'Mediadores',
             href: '/mediators',
             icon: Users,
@@ -50,6 +55,11 @@ export function AppSidebar() {
                 title: 'Mediators',
                 href: '/backoffice/mediators',
                 icon: Briefcase,
+            },
+            {
+                title: 'Coupons Manager',
+                href: '/backoffice/coupons',
+                icon: Ticket,
             },
         ];
     }

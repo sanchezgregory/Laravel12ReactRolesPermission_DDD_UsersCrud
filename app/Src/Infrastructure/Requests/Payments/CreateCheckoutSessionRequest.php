@@ -20,6 +20,7 @@ class CreateCheckoutSessionRequest extends FormRequest
             'amount_minor' => ['required', 'integer', 'min:1'],
             'currency' => ['required', 'string', 'size:3'],
             'topic' => ['nullable', 'string', 'max:255'],
+            'coupon_code' => ['nullable', 'string', 'max:50'],
         ];
     }
 
@@ -39,6 +40,7 @@ class CreateCheckoutSessionRequest extends FormRequest
             'amount_minor' => (int) $this->input('amount_minor'),
             'currency' => (string) $this->input('currency'),
             'topic' => $this->input('topic'),
+            'coupon_code' => $this->input('coupon_code'),
         ];
     }
 }

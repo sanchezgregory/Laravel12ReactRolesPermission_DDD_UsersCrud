@@ -13,6 +13,8 @@ use App\Src\Domain\Entities\SessionPaymentEntity;
 use App\Src\Domain\ValueObjects\Money;
 use App\Src\Domain\ValueObjects\PaymentMethod;
 use App\Src\Domain\ValueObjects\PaymentStatus;
+use App\Src\Application\Coupons\CouponService;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
 class GeneralSessionPaymentService
@@ -23,19 +25,39 @@ class GeneralSessionPaymentService
         // private readonly PaymentConfigurationService $paymentConfigService, // Logic moved to Gateways or Factory? 
         // Config Service logic (platform fee check) might still be relevant for getting the FEE AMOUNT to pass to gateway.
         private readonly PaymentConfigurationService $paymentConfigService, 
-        private readonly PaymentFactory $paymentFactory
+        private readonly PaymentFactory $paymentFactory,
+        private readonly CouponService $couponService
     ) {}
 
     public function createCheckout(array $data, string $gatewaySlug): CreateCheckoutResultDTO
     {
         $user = $this->userService->findById($data['user_id']);
 
+        // Coupon Logic
+        $couponCode = $data['coupon_code'] ?? null;
+        $amountMinor = $data['amount_minor'];
+        $discountApplied = 0;
+        
+        if ($couponCode) {
+            $userModel = User::find($data['user_id']);
+            if (!$userModel) {
+                 throw new \Exception("User not found for coupon validation.");
+            }
+            // Validate code (throws exception if invalid)
+            $coupon = $this->couponService->validateCoupon($couponCode, $userModel);
+            
+            // Calculate discount
+            $discountAmount = (int) round($amountMinor * ($coupon->discount_percentage / 100));
+            $amountMinor = max(0, $amountMinor - $discountAmount);
+            $discountApplied = $discountAmount;
+        }
+
         $dto = new CreateCheckoutDTO(
             userId: $data['user_id'],
             mediatorId: $data['mediator_id'],
             email: $user->email,
             method: $data['method'], // 'card', etc.
-            amountMinor: $data['amount_minor'],
+            amountMinor: $amountMinor,
             currency: $data['currency'],
             topic: $data['topic'],
         );
@@ -47,6 +69,12 @@ class GeneralSessionPaymentService
 
         // 2. Create Entity
         $metadata = array_merge($dto->getMetadata(), ['gateway' => $gatewaySlug]);
+        if ($couponCode) {
+            $metadata['coupon_code'] = $couponCode;
+            $metadata['original_amount'] = $data['amount_minor'];
+            $metadata['discount_amount'] = $discountApplied;
+            $metadata['coupon_redeemed'] = false; // logic flag
+        }
         
         $payment = new SessionPaymentEntity(
             id: null,
@@ -72,6 +100,30 @@ class GeneralSessionPaymentService
             amountMinor: $dto->amountMinor,
             currency: $dto->currency
         );
+
+        // Check Early Completion (Free)
+        if ($amountMinor === 0) {
+            $savedPayment->markPaid('FREE_COUPON');
+            $savedPayment->providerSessionId = 'FREE_COUPON_' . uniqid();
+            
+            // Redeem Coupon Logic
+            if ($couponCode && !($savedPayment->metadata['coupon_redeemed'] ?? false)) {
+                $userModel = User::find($data['user_id']);
+                if ($userModel) {
+                    $this->couponService->redeemCoupon($couponCode, $userModel);
+                    $meta = $savedPayment->metadata;
+                    $meta['coupon_redeemed'] = true;
+                    $savedPayment->metadata = $meta;
+                }
+            }
+
+            $this->repo->update($savedPayment->id, $savedPayment);
+            
+            return new CreateCheckoutResultDTO(
+                paymentId: $savedPayment->id,
+                redirectUrl: route('payments.success')
+            );
+        }
 
         // 4. Calculate Fee if any
         $marketplaceFee = 0;
@@ -152,6 +204,19 @@ class GeneralSessionPaymentService
 
              if ($status && $status->value === PaymentStatus::PAID && $payment->status->value !== PaymentStatus::PAID) {
                   $payment->markPaid();
+                  
+                  // Redeem Coupon Logic
+                  $couponCode = $payment->metadata['coupon_code'] ?? null;
+                  if ($couponCode && !($payment->metadata['coupon_redeemed'] ?? false)) {
+                      $userModel = User::find($payment->userId);
+                      if ($userModel) {
+                          $this->couponService->redeemCoupon($couponCode, $userModel);
+                          $meta = $payment->metadata;
+                          $meta['coupon_redeemed'] = true;
+                          $payment->metadata = $meta;
+                      }
+                  }
+                  
                   $this->repo->update($payment->id, $payment);
                   Log::info("Payment marked as paid via sync: " . $payment->id);
              }
@@ -224,6 +289,19 @@ class GeneralSessionPaymentService
         if ($result->status && $result->status->value === PaymentStatus::PAID) {
              if ($payment->status->value !== PaymentStatus::PAID) {
                  $payment->markPaid($result->paymentIntentId);
+                 
+                 // Redeem Coupon Logic
+                 $couponCode = $payment->metadata['coupon_code'] ?? null;
+                 if ($couponCode && !($payment->metadata['coupon_redeemed'] ?? false)) {
+                     $userModel = User::find($payment->userId);
+                     if ($userModel) {
+                         $this->couponService->redeemCoupon($couponCode, $userModel);
+                         $meta = $payment->metadata;
+                         $meta['coupon_redeemed'] = true;
+                         $payment->metadata = $meta;
+                     }
+                 }
+                 
                  $this->repo->update($payment->id, $payment);
                  Log::info("Payment marked as paid via webhook", [
                      'payment_id' => $payment->id,
