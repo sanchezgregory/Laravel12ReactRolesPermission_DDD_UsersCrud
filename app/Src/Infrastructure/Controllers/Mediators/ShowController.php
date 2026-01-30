@@ -9,6 +9,8 @@ use Inertia\Inertia;
 use App\Src\Application\Services\SessionPaymentService;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\User;
+
 class ShowController extends Controller
 {
     public function __invoke(
@@ -60,11 +62,24 @@ class ShowController extends Controller
             }
         }
 
+        $availableCoupons = [];
+        if (Auth::check()) {
+            $user = User::find(Auth::id());
+            if ($user) {
+                $availableCoupons = \App\Models\Coupon::availableForUser($user)
+                    ->active()
+                    ->select('code', 'discount_percentage', 'expires_at')
+                    ->get()
+                    ->toArray();
+            }
+        }
+
         return Inertia::render('mediators/Show', [
             'mediator' => $mediator->toArray(),
             'current_session' => $currentSession,
             'other_active_session' => $otherActiveSession,
             'available_payment_methods' => $availablePaymentMethods,
+            'available_coupons' => $availableCoupons,
         ]);
     }
 }

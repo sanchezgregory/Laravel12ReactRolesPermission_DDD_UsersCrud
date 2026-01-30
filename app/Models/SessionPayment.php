@@ -47,4 +47,9 @@ class SessionPayment extends Model
     {
         return $this->belongsTo(MediatorSession::class);
     }
+
+    public function participants()
+    {
+        return $this->hasMany(SessionParticipant::class);
+    }
 }

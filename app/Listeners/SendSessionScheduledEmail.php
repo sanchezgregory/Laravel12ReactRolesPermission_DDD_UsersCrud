@@ -23,6 +23,7 @@ class SendSessionScheduledEmail implements ShouldQueue
      */
     public function handle(SessionScheduled $event): void
     {
+        // Send to Mediator
         if ($event->mediator && $event->mediator->email) {
             \Illuminate\Support\Facades\Mail::to($event->mediator->email)->send(
                 new \App\Mail\SessionScheduledConfirmationMail(
@@ -32,6 +33,22 @@ class SendSessionScheduledEmail implements ShouldQueue
                     $event->notes
                 )
             );
+        }
+
+        // Send to Participants
+        if (!empty($event->participants)) {
+            foreach ($event->participants as $email) {
+                if ($email) {
+                    \Illuminate\Support\Facades\Mail::to($email)->send(
+                        new \App\Mail\SessionScheduledConfirmationMail(
+                            (object)['name' => 'Participante'], // Dummy user for mailable personalized greeting potentially?
+                            $event->user,
+                            $event->scheduledAt,
+                            $event->notes
+                        )
+                    );
+                }
+            }
         }
     }
 }

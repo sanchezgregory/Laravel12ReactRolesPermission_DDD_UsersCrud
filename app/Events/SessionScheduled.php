@@ -18,7 +18,8 @@ class SessionScheduled
         public $mediator,
         public $user,
         public $scheduledAt,
-        public $notes
+        public $notes,
+        public array $participants = []
     ) {}
 
     /**

@@ -121,7 +121,10 @@ class GeneralSessionPaymentService
             
             return new CreateCheckoutResultDTO(
                 paymentId: $savedPayment->id,
-                redirectUrl: route('payments.success')
+                redirectUrl: route('payments.success', [
+                    'session_id' => $savedPayment->providerSessionId, // Used as identifier in return controller
+                    'mediator_id' => $dto->mediatorId // Helps in flow
+                ]) 
             );
         }
 

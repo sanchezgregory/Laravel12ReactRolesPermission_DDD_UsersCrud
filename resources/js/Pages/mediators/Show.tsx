@@ -37,7 +37,7 @@ type PageProps = {
         mediator_name: string;
         created_at: string;
     } | null;
-    available_payment_methods: string[]; // Added
+    available_coupons?: { code: string, discount_percentage: number, expires_at: string }[];
     auth?: {
         user?: {
             id: number;
@@ -53,7 +53,8 @@ type PageProps = {
         error?: string; // Backend error
         [key: string]: any;
     };
-};
+    available_payment_methods: string[];
+}; // Close PageProps
 
 function formatPrice(amountMinor: number, currency: string) {
     const amount = amountMinor / 100;
@@ -64,7 +65,7 @@ function formatPrice(amountMinor: number, currency: string) {
     }
 }
 
-export default function MediatorShow({ mediator, auth, current_session, other_active_session, available_payment_methods, errors: serverErrors }: PageProps) {
+export default function MediatorShow({ mediator, auth, current_session, other_active_session, available_payment_methods, available_coupons = [], errors: serverErrors }: PageProps) {
     const { flash } = usePage<PageProps>().props;
     const isLoggedIn = !!auth?.user;
     const [loading, setLoading] = useState(false);
@@ -92,11 +93,35 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
     const hasAlreadyScheduledError = serverErrors.error === "No se encontró una sesión pagada pendiente de agendar.";
     const isReadOnly = isAlreadyScheduled || hasAlreadyScheduledError;
 
+    // Participants State for Form
     const { data, setData, post, processing, errors, reset } = useForm({
         mediator_id: mediator.id,
         scheduled_at: '',
         notes: '',
+        participants: [] as { email: string }[],
     });
+
+    // Helper to add participant
+    const addParticipant = () => {
+        if (data.participants.length < 5) {
+            setData('participants', [...data.participants, { email: '' }]);
+        }
+    };
+
+    // Helper to remove participant
+    const removeParticipant = (index: number) => {
+        const newParticipants = [...data.participants];
+        newParticipants.splice(index, 1);
+        setData('participants', newParticipants);
+    };
+
+    // Helper to update participant email
+    const updateParticipantEmail = (index: number, email: string) => {
+        const newParticipants = [...data.participants];
+        newParticipants[index].email = email;
+        setData('participants', newParticipants);
+    };
+
 
     useEffect(() => {
         if (hasActivePayment) {
@@ -123,7 +148,17 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
 
     }, [hasActivePayment, current_session, hasAlreadyScheduledError]);
 
-    async function handleValidateCoupon() {
+    // Function to apply a selected coupon directly
+    async function applyCoupon(code: string) {
+        setCouponCode(code);
+        // We need to trigger validation immediately or just set it?
+        // Better to validate via backend to be sure.
+        // But we can simplify by setting state and calling validate.
+        // We'll call validations logic but with specific code.
+        await validateCouponInternal(code);
+    }
+
+    async function validateCouponInternal(code: string) {
         setValidatingCoupon(true);
         setCouponError(null);
         setCouponResult(null);
@@ -136,15 +171,19 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                 },
-                body: JSON.stringify({ coupon_code: couponCode }),
+                body: JSON.stringify({ coupon_code: code }),
             });
 
-            const data = await response.json();
+            const responseData = await response.json();
 
-            if (response.ok && data.valid) {
-                setCouponResult(data);
+            if (response.ok && responseData.valid) {
+                setCouponResult(responseData);
+                // IF 100% DISCOUNT, AUTO PAY logic?
+                // Requirements say: "redimir... y si elighe un cupon de 100%, ya se debe marcar la sesion como pagada"
+                // So if valid & 100%, we should show a specific "Redeem Free Session" button OR auto-trigger?
+                // A UI step "Confirm redemption" is safer than auto-triggering on type.
             } else {
-                setCouponError(data.message || 'Cupón inválido');
+                setCouponError(responseData.message || 'Cupón inválido');
             }
         } catch (error) {
             console.error(error);
@@ -154,25 +193,13 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
         }
     }
 
+    async function handleValidateCoupon() {
+        await validateCouponInternal(couponCode);
+    }
+
     function handlePayClick() {
-        console.log("Methods:", available_payment_methods);
-        if (available_payment_methods.length > 1) {
-            setShowPaymentModal(true);
-        } else if (available_payment_methods.length === 1) {
-            // Check if coupon logic is needed even for single method if we want to support coupons
-            // If user has to input coupon, they need the modal.
-            // So if coupons are enabled, we might ALWAYS want to show modal? 
-            // Or only if they explicitly want to add a coupon?
-            // For simplicity, let's open modal if they click pay, or maybe we assume they might want to add coupon.
-            // Current user flow: Click 'Pagar Sesión' -> checks length.
-            // If I want to support coupons, I should probably always open the modal to allow coupon entry, 
-            // OR have a separate 'Have a coupon?' link.
-            // For now, I'll force modal open if single method too, to allow coupon entry.
-            setShowPaymentModal(true);
-        } else {
-            console.warn("No payment methods available");
-            alert("No hay métodos de pago disponibles en este momento. Por favor contacte al soporte.");
-        }
+        // Always show modal to allow coupon selection
+        setShowPaymentModal(true);
     }
 
     function processPayment(method: string) {
@@ -185,7 +212,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
             method: 'card', // Generic default
             topic: `Session with ${mediator.name}`,
             metadata: { source: 'mediator_show' },
-            coupon_code: couponResult && couponResult?.valid ? couponCode : null,
+            coupon_code: couponResult && couponResult?.valid ? couponResult.coupon.code : null, // Use result code to be safe
         }, {
             onFinish: () => {
                 setLoading(false);
@@ -197,6 +224,19 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                 setLoading(false);
             }
         });
+    }
+
+    function processFreeRedemption() {
+        // For 100% coupons, we basically 'pay' with any gateway trigger but the backend handles zero amount.
+        // We can reuse processPayment with a dummy gateway or just 'stripe' as it will be bypassed.
+        // OR we just send 'free' as gateway?
+        // Backend `GeneralSessionPaymentService` expects a valid gateway to instantiation factory initially?
+        // Actually line 32 in Service: `createCheckout(array $data, string $gatewaySlug)`
+        // If amount is 0, it calls `markPaid` and returns before factory.
+        // So we can send 'stripe' or any valid slug so validation passes.
+        // Let's use available_payment_methods[0] or 'manual'.
+        const gateway = available_payment_methods.length > 0 ? available_payment_methods[0] : 'stripe';
+        processPayment(gateway);
     }
 
     // ... handleSubmitSchedule logic ...
@@ -249,74 +289,115 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
             <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Selecciona el método de pago</DialogTitle>
+                        <DialogTitle>Monto a Pagar</DialogTitle>
                         <DialogDescription>
-                            Elige cómo deseas procesar tu pago seguro.
+                            Total: <span className="font-bold text-foreground text-lg">{formatPrice(mediator.session_price_minor, mediator.currency)}</span>
                         </DialogDescription>
                     </DialogHeader>
 
                     {/* Coupon Section */}
-                    <div className="space-y-2 pt-2">
-                        <Label>¿Tienes un cupón?</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                placeholder="Código de cupón"
-                                value={couponCode}
-                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                disabled={!!couponResult || validatingCoupon}
-                            />
-                            {couponResult ? (
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => {
-                                        setCouponResult(null);
-                                        setCouponCode("");
-                                    }}
-                                >
-                                    Quitar
-                                </Button>
-                            ) : (
-                                <Button
-                                    variant="secondary"
-                                    onClick={handleValidateCoupon}
-                                    disabled={!couponCode || validatingCoupon}
-                                >
-                                    {validatingCoupon ? "Validando..." : "Aplicar"}
-                                </Button>
-                            )}
-                        </div>
-                        {couponError && <p className="text-sm text-red-500">{couponError}</p>}
-                        {couponResult && (
-                            <div className="rounded-md bg-green-50 p-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                                <p className="font-semibold">¡Cupón aplicado!</p>
-                                <p>{couponResult.coupon.discount_percentage}% de descuento.</p>
-                                <p>Nuevo total: {formatPrice(Math.round(mediator.session_price_minor * (1 - couponResult.coupon.discount_percentage / 100)), mediator.currency)}</p>
+                    <div className="space-y-4 pt-2">
+                        {/* List Available Coupons if any */}
+                        {available_coupons.length > 0 && !couponResult && (
+                            <div className="space-y-2">
+                                <Label className="text-xs font-semibold uppercase text-muted-foreground">Cupones Disponibles</Label>
+                                <div className="grid gap-2">
+                                    {available_coupons.map(coupon => (
+                                        <div key={coupon.code} className="flex items-center justify-between rounded-md border p-3 bg-muted/30">
+                                            <div>
+                                                <p className="font-medium text-sm">{coupon.code}</p>
+                                                <p className="text-xs text-muted-foreground">{coupon.discount_percentage}% OFF</p>
+                                            </div>
+                                            <Button size="sm" variant="outline" onClick={() => applyCoupon(coupon.code)}>Usar</Button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
+
+                        <div className="space-y-2">
+                            <Label>¿Tienes un código?</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    placeholder="Código de cupón"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                    disabled={!!couponResult || validatingCoupon}
+                                />
+                                {couponResult ? (
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setCouponResult(null);
+                                            setCouponCode("");
+                                        }}
+                                    >
+                                        Quitar
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="secondary"
+                                        onClick={handleValidateCoupon}
+                                        disabled={!couponCode || validatingCoupon}
+                                    >
+                                        {validatingCoupon ? "Validando..." : "Aplicar"}
+                                    </Button>
+                                )}
+                            </div>
+                            {couponError && <p className="text-sm text-red-500">{couponError}</p>}
+                            {couponResult && (
+                                <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400 space-y-1">
+                                    <p className="font-semibold flex items-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        <span>¡Cupón aplicado!</span>
+                                    </p>
+                                    <div className="flex justify-between items-center pt-1 border-t border-green-200 dark:border-green-800 mt-2">
+                                        <span>Total con descuento ({couponResult.coupon.discount_percentage}% OFF):</span>
+                                        <span className="font-bold text-lg">
+                                            {formatPrice(Math.round(mediator.session_price_minor * (1 - couponResult.coupon.discount_percentage / 100)), mediator.currency)}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="space-y-4 py-4">
-                        {available_payment_methods.map((method) => (
+                    <div className="space-y-4 py-4 pt-0">
+                        {/* If 100% discount, show FREE button only */}
+                        {couponResult && couponResult.coupon.discount_percentage === 100 ? (
                             <Button
-                                key={method}
-                                variant="outline"
-                                className="w-full justify-start h-14"
-                                onClick={() => processPayment(method)}
+                                className="w-full text-lg h-14 bg-green-600 hover:bg-green-700 text-white"
+                                onClick={processFreeRedemption}
                                 disabled={loading}
                             >
-                                {method === 'stripe' && (
-                                    <>
-                                        <span className="font-semibold text-lg">Tarjeta de Crédito / Débito (Stripe)</span>
-                                    </>
-                                )}
-                                {method === 'mercadopago' && (
-                                    <>
-                                        <span className="font-semibold text-lg">Mercado Pago / Efectivo</span>
-                                    </>
-                                )}
-                                {!['stripe', 'mercadopago'].includes(method) && method}
+                                {loading ? "Procesando..." : "Confirmar Sesión Gratis"}
                             </Button>
-                        ))}
+                        ) : (
+                            <>
+                                <Label className="text-xs font-semibold uppercase text-muted-foreground mt-4 block">Método de Pago</Label>
+                                {available_payment_methods.map((method: string) => (
+                                    <Button
+                                        key={method}
+                                        variant="outline"
+                                        className="w-full justify-start h-14"
+                                        onClick={() => processPayment(method)}
+                                        disabled={loading}
+                                    >
+                                        {method === 'stripe' && (
+                                            <>
+                                                <span className="font-semibold text-lg">Tarjeta de Crédito / Débito (Stripe)</span>
+                                            </>
+                                        )}
+                                        {method === 'mercadopago' && (
+                                            <>
+                                                <span className="font-semibold text-lg">Mercado Pago / Efectivo</span>
+                                            </>
+                                        )}
+                                        {!['stripe', 'mercadopago'].includes(method) && method}
+                                    </Button>
+                                ))}
+                            </>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>
@@ -324,7 +405,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
             {/* Schedule submission modal */}
             <Dialog open={showScheduleModal} onOpenChange={setShowScheduleModal}>
                 {/* ... existing schedule modal content ... */}
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg">
                     <form onSubmit={handleSubmitSchedule}>
                         <DialogHeader>
                             <DialogTitle>
@@ -333,7 +414,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                             <DialogDescription className="pt-2">
                                 {isReadOnly
                                     ? "Esta sesión ya ha sido agendada."
-                                    : "Ingresa la fecha y hora que seleccionaste en Calendly."}
+                                    : "Confirma los detalles de tu sesión y agrega participantes."}
                             </DialogDescription>
                         </DialogHeader>
 
@@ -346,7 +427,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
 
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <Label htmlFor="scheduled_at">Fecha y Hora {isReadOnly ? '' : '*'}</Label>
+                                <Label htmlFor="scheduled_at">Fecha y Hora (Seleccionada en Calendly) {isReadOnly ? '' : '*'}</Label>
                                 <SchedulerInput
                                     id="scheduled_at"
                                     value={data.scheduled_at}
@@ -361,7 +442,50 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                 )}
                             </div>
 
-                            <div className="space-y-2">
+                            {/* Participants Section */}
+                            <div className="space-y-3 border-t pt-4">
+                                <div className="flex items-center justify-between">
+                                    <Label>Participantes (Emails)</Label>
+                                    {!isReadOnly && data.participants.length < 5 && (
+                                        <Button type="button" variant="ghost" size="sm" onClick={addParticipant} className="h-8 text-xs">
+                                            + Agregar Email
+                                        </Button>
+                                    )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Agrega hasta 5 correos electrónicos de las personas que asistirán.
+                                </p>
+
+                                {data.participants.map((participant, index) => (
+                                    <div key={index} className="flex gap-2">
+                                        <Input
+                                            placeholder={`Email participante ${index + 1}`}
+                                            value={participant.email}
+                                            onChange={(e) => updateParticipantEmail(index, e.target.value)}
+                                            type="email"
+                                            disabled={isReadOnly}
+                                            required
+                                        />
+                                        {!isReadOnly && (
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeParticipant(index)}>
+                                                <span className="sr-only">Eliminar</span>
+                                                <span aria-hidden="true" className="text-lg text-red-500">×</span>
+                                            </Button>
+                                        )}
+                                        {/* Error for specific index if needed, but errors bag usually returns array format like 'participants.0.email' */}
+                                        {errors[`participants.${index}.email`] && (
+                                            <p className="text-xs text-red-600">{errors[`participants.${index}.email`]}</p>
+                                        )}
+                                    </div>
+                                ))}
+                                {data.participants.length === 0 && !isReadOnly && (
+                                    <Button type="button" variant="outline" size="sm" onClick={addParticipant} className="w-full border-dashed">
+                                        Agregar Participante
+                                    </Button>
+                                )}
+                            </div>
+
+                            <div className="space-y-2 border-t pt-4">
                                 <Label htmlFor="notes">Notas (opcional)</Label>
                                 <Textarea
                                     id="notes"

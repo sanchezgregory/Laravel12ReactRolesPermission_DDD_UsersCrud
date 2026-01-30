@@ -27,12 +27,15 @@ class SubmitScheduledSessionController extends Controller
             'mediator_id' => 'required|integer|exists:users,id',
             'scheduled_at' => 'required|date',
             'notes' => 'nullable|string|max:500',
+            'participants' => 'nullable|array|max:5',
+            'participants.*.email' => 'required|email',
         ]);
 
         $userId = Auth::id();
         $mediatorId = (int) $validated['mediator_id'];
         $scheduledAt = $validated['scheduled_at'];
         $notes = $validated['notes'] ?? null;
+        $participants = $validated['participants'] ?? [];
 
         // Find the active paid session for this user and mediator
         $session = SessionPayment::where('user_id', $userId)
@@ -43,6 +46,15 @@ class SubmitScheduledSessionController extends Controller
 
         if (!$session) {
             return back()->withErrors(['error' => 'No se encontró una sesión pagada pendiente de agendar.']);
+        }
+
+        // Save participants
+        if (!empty($participants)) {
+            foreach ($participants as $participant) {
+                $session->participants()->create([
+                    'email' => $participant['email'],
+                ]);
+            }
         }
 
         // Update the scheduled_at and notes
@@ -64,12 +76,13 @@ class SubmitScheduledSessionController extends Controller
                 $mediator,
                 $user,
                 $scheduledAt,
-                $notes
+                $notes,
+                array_column($participants, 'email') // Pass participant emails
             );
         }
 
         // Redirect back with success message
-        return back()->with('success', 'Tu sesión ha sido registrada. El mediador recibirá un correo de confirmación.');
+        return back()->with('success', 'Tu sesión ha sido registrada. El mediador y los participantes recibirán un correo de confirmación.');
     }
 }
 
