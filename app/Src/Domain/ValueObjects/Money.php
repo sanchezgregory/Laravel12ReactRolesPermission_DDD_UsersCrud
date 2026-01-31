@@ -12,8 +12,8 @@ final readonly class Money implements JsonSerializable
         public int $amountMinor,
         public Currency $currency
     ) {
-        if ($amountMinor <= 0) {
-            throw new InvalidArgumentException('Amount must be greater than 0.');
+        if ($amountMinor < 0) {
+            throw new InvalidArgumentException('Amount must be greater than or equal to 0.');
         }
     }
 

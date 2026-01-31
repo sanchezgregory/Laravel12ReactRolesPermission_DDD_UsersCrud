@@ -22,7 +22,7 @@ class ValidateCouponController
         try {
             /** @var User $user */
             $user = Auth::user();
-            $code = $request->input('coupon_code');
+            $code = trim($request->input('coupon_code'));
 
             $coupon = $this->couponService->validateCoupon($code, $user);
 

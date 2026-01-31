@@ -159,6 +159,9 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
     }
 
     async function validateCouponInternal(code: string) {
+        const trimmedCode = code.trim();
+        if (!trimmedCode) return;
+
         setValidatingCoupon(true);
         setCouponError(null);
         setCouponResult(null);
@@ -171,7 +174,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                 },
-                body: JSON.stringify({ coupon_code: code }),
+                body: JSON.stringify({ coupon_code: trimmedCode }),
             });
 
             const responseData = await response.json();
@@ -354,7 +357,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                     <div className="flex justify-between items-center pt-1 border-t border-green-200 dark:border-green-800 mt-2">
                                         <span>Total con descuento ({couponResult.coupon.discount_percentage}% OFF):</span>
                                         <span className="font-bold text-lg">
-                                            {formatPrice(Math.round(mediator.session_price_minor * (1 - couponResult.coupon.discount_percentage / 100)), mediator.currency)}
+                                            {formatPrice(Math.max(0, mediator.session_price_minor - Math.round(mediator.session_price_minor * (couponResult.coupon.discount_percentage / 100))), mediator.currency)}
                                         </span>
                                     </div>
                                 </div>
@@ -370,7 +373,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                 onClick={processFreeRedemption}
                                 disabled={loading}
                             >
-                                {loading ? "Procesando..." : "Confirmar Sesión Gratis"}
+                                {loading ? "Procesando..." : "Redimir"}
                             </Button>
                         ) : (
                             <>
@@ -390,7 +393,7 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                         )}
                                         {method === 'mercadopago' && (
                                             <>
-                                                <span className="font-semibold text-lg">Mercado Pago / Efectivo</span>
+                                                <span className="font-semibold text-lg">Pagar con Mercado Pago</span>
                                             </>
                                         )}
                                         {!['stripe', 'mercadopago'].includes(method) && method}

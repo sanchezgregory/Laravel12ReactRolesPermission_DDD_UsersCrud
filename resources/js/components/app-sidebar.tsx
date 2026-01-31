@@ -73,9 +73,14 @@ export function AppSidebar() {
                 icon: Users,
             },
             {
-                title: 'Mediators',
+                title: 'Mediators Manager',
                 href: '/backoffice/mediators',
                 icon: Briefcase,
+            },
+            {
+                title: 'Mediators Preview',
+                href: '/mediators',
+                icon: Users,
             },
             {
                 title: 'Coupons Manager',

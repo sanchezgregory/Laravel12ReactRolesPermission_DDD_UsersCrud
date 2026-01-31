@@ -20,10 +20,16 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link, router } from "@inertiajs/react";
+import { router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
 
 export type Coupon = {
     id: number
@@ -32,10 +38,16 @@ export type Coupon = {
     expires_at: string
     active: boolean
     max_uses_per_user: number
+    allowed_users_type: string
     redemptions_count: number
+    users: User[]
 }
 
-export const columns: ColumnDef<Coupon>[] = [
+interface GetColumnsProps {
+    onEdit: (coupon: Coupon) => void;
+}
+
+export const getColumns = ({ onEdit }: GetColumnsProps): ColumnDef<Coupon>[] => [
     {
         accessorKey: "code",
         header: "Code",
@@ -87,8 +99,8 @@ export const columns: ColumnDef<Coupon>[] = [
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem asChild>
-                                <Link href={route('backoffice.coupons.edit', coupon.id)}>Edit</Link>
+                            <DropdownMenuItem onClick={() => onEdit(coupon)}>
+                                Edit
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <AlertDialogTrigger asChild>

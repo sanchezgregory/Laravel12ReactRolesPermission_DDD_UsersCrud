@@ -1,17 +1,33 @@
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AppLayout from '@/layouts/app-layout';
 import { DataTable } from '@/pages/backoffice/users/data-table';
 import { Head, Link } from '@inertiajs/react';
-import { columns, Coupon } from './columns';
+import { useMemo, useState } from 'react';
+import { EditCouponForm } from './EditCouponForm';
+import { Coupon, getColumns } from './columns';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
 
 interface IndexPageProps {
     coupons: {
         data: Coupon[];
     };
+    users: User[];
 }
 
-export default function Index({ coupons }: IndexPageProps) {
+export default function Index({ coupons, users }: IndexPageProps) {
     const couponsData = coupons.data;
+    const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+
+    const columns = useMemo(() => getColumns({
+        onEdit: (coupon) => setEditingCoupon(coupon)
+    }), []);
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -45,6 +61,22 @@ export default function Index({ coupons }: IndexPageProps) {
                     </div>
                 </div>
             </div>
+
+            <Dialog open={!!editingCoupon} onOpenChange={(open) => !open && setEditingCoupon(null)}>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Coupon</DialogTitle>
+                    </DialogHeader>
+                    {editingCoupon && (
+                        <EditCouponForm
+                            coupon={editingCoupon}
+                            users={users}
+                            onSuccess={() => setEditingCoupon(null)}
+                            onCancel={() => setEditingCoupon(null)}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

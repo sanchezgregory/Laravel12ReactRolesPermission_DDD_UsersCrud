@@ -199,8 +199,18 @@ class GeneralSessionPaymentService
             'current_status' => $payment->status->value
         ]);
 
-        $gatewaySlug = $payment->metadata['gateway'] ?? 'stripe'; // Default to stripe for legacy
+        // Default to stripe for legacy
+        $gatewaySlug = $payment->metadata['gateway'] ?? 'stripe'; 
         
+        // Optimize: If already paid, we generally don't need to sync with gateway, 
+        // especially for FREE_COUPON which has a fake session ID that would error in gateway.
+        if ($payment->status->value === PaymentStatus::PAID) {
+            return [
+                'paid' => true,
+                'mediator' => $payment->mediatorId,
+            ];
+        }
+
         try {
              $gateway = $this->paymentFactory->make($gatewaySlug);
              $status = $gateway->syncPayment($payment);
