@@ -18,6 +18,12 @@ interface Payment {
     currency: string;
     status: string;
     created_at: string;
+    metadata?: {
+        coupon_code?: string;
+        original_amount?: number;
+        discount_amount?: number;
+        [key: string]: any;
+    };
 }
 
 interface Props {
@@ -50,6 +56,7 @@ export default function Payments({ payments }: Props) {
                                 <TableRow>
                                     <TableHead>Client</TableHead>
                                     <TableHead>Amount</TableHead>
+                                    <TableHead>Coupon</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Date</TableHead>
                                 </TableRow>
@@ -64,10 +71,24 @@ export default function Payments({ payments }: Props) {
                                             {(payment.amount_total / 100).toFixed(2)} {payment.currency}
                                         </TableCell>
                                         <TableCell>
+                                            {payment.metadata?.coupon_code ? (
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-xs">{payment.metadata.coupon_code}</span>
+                                                    {payment.metadata.original_amount && payment.metadata.discount_amount ? (
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            {Math.round((payment.metadata.discount_amount / payment.metadata.original_amount) * 100)}% OFF
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            ) : (
+                                                <span className="text-muted-foreground">-</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
                                             <span
                                                 className={`px-2 py-1 rounded-full text-xs font-semibold ${payment.status === 'paid'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-yellow-100 text-yellow-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-yellow-100 text-yellow-800'
                                                     }`}
                                             >
                                                 {payment.status}
@@ -80,7 +101,7 @@ export default function Payments({ payments }: Props) {
                                 ))}
                                 {payments.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center">
+                                        <TableCell colSpan={5} className="text-center">
                                             No payments found.
                                         </TableCell>
                                     </TableRow>
