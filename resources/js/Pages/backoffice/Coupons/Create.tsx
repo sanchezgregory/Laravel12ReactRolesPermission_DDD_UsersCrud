@@ -22,15 +22,15 @@ interface CreatePageProps {
 
 const breadcrumbs = [
     {
-        title: 'Home',
+        title: 'Inicio',
         href: '/backoffice/dashboard',
     },
     {
-        title: 'Coupons',
+        title: 'Cupones',
         href: '/backoffice/coupons',
     },
     {
-        title: 'Create Coupon',
+        title: 'Crear Cupón',
         href: null,
     },
 ];
@@ -66,6 +66,23 @@ export default function Create({ users }: CreatePageProps) {
         }
     };
 
+    const generateRandomCode = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        setData('code', result);
+    };
+
+    const handleClearSelection = () => {
+        setData(data => ({
+            ...data,
+            selected_users: [],
+            allowed_users_type: 'all'
+        }));
+    };
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('backoffice.coupons.store'));
@@ -73,37 +90,44 @@ export default function Create({ users }: CreatePageProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create Coupon" />
+            <Head title="Crear Cupón" />
 
-            <div className="max-w-2xl mx-auto py-12 sm:px-6 lg:px-8">
+            <div className="w-full max-w-7xl mx-auto py-12 sm:px-6 lg:px-8">
                 <Card>
                     <form onSubmit={submit}>
                         <CardHeader>
-                            <CardTitle>Create New Coupon</CardTitle>
+                            <CardTitle>Crear Nuevo Cupón</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {/* Code */}
+                            {/* Code */}
                             <div className="space-y-2">
-                                <Label htmlFor="code">Code (Optional, 6 chars uppercase)</Label>
-                                <Input
-                                    id="code"
-                                    value={data.code}
-                                    onChange={(e) => setData('code', e.target.value.toUpperCase())}
-                                    maxLength={6}
-                                    placeholder="Leave empty to auto-generate"
-                                />
+                                <Label htmlFor="code">Código (Opcional, 6 carac. mayúsculas)</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="code"
+                                        value={data.code}
+                                        onChange={(e) => setData('code', e.target.value.toUpperCase())}
+                                        maxLength={6}
+                                        placeholder="Dejar vacío para autogenerar"
+                                        className="flex-1"
+                                    />
+                                    <Button type="button" variant="outline" onClick={generateRandomCode}>
+                                        Generar
+                                    </Button>
+                                </div>
                                 {errors.code && <p className="text-red-500 text-sm">{errors.code}</p>}
                             </div>
 
                             {/* Discount */}
                             <div className="space-y-2">
-                                <Label htmlFor="discount">Discount Percentage</Label>
+                                <Label htmlFor="discount">Porcentaje de Descuento</Label>
                                 <Select
                                     value={data.discount_percentage}
                                     onValueChange={(val) => setData('discount_percentage', val)}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select discount" />
+                                        <SelectValue placeholder="Seleccionar descuento" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="25">25%</SelectItem>
@@ -117,30 +141,40 @@ export default function Create({ users }: CreatePageProps) {
 
                             {/* Expires At */}
                             <div className="space-y-2">
-                                <Label htmlFor="expires_at">Expires At</Label>
+                                <Label htmlFor="expires_at">Expira el</Label>
                                 <Input
                                     id="expires_at"
                                     type="date"
+                                    min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
                                     value={data.expires_at}
                                     onChange={(e) => setData('expires_at', e.target.value)}
+                                    onClick={(e) => {
+                                        try {
+                                            if ('showPicker' in e.currentTarget) {
+                                                (e.currentTarget as any).showPicker();
+                                            }
+                                        } catch (error) {
+                                            // Fallback or ignore
+                                        }
+                                    }}
                                 />
                                 {errors.expires_at && <p className="text-red-500 text-sm">{errors.expires_at}</p>}
                             </div>
 
                             {/* Max Uses */}
                             <div className="space-y-2">
-                                <Label htmlFor="max_uses">Max Uses Per User</Label>
+                                <Label htmlFor="max_uses">Usos Máximos por Usuario</Label>
                                 <Select
                                     value={data.max_uses_per_user}
                                     onValueChange={(val) => setData('max_uses_per_user', val)}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select limit" />
+                                        <SelectValue placeholder="Seleccionar límite" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="1">1 time</SelectItem>
-                                        <SelectItem value="2">2 times</SelectItem>
-                                        <SelectItem value="3">3 times</SelectItem>
+                                        <SelectItem value="1">1 vez</SelectItem>
+                                        <SelectItem value="2">2 veces</SelectItem>
+                                        <SelectItem value="3">3 veces</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.max_uses_per_user && <p className="text-red-500 text-sm">{errors.max_uses_per_user}</p>}
@@ -153,23 +187,23 @@ export default function Create({ users }: CreatePageProps) {
                                     checked={data.active}
                                     onCheckedChange={(checked) => setData('active', checked === true)}
                                 />
-                                <Label htmlFor="active">Active</Label>
+                                <Label htmlFor="active">Activo</Label>
                             </div>
 
                             {/* Target Audience */}
                             <div className="space-y-2">
-                                <Label htmlFor="allowed_users_type">Target Audience</Label>
+                                <Label htmlFor="allowed_users_type">Audiencia Objetivo</Label>
                                 <Select
                                     value={data.allowed_users_type}
                                     onValueChange={(val) => setData('allowed_users_type', val)}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select target" />
+                                        <SelectValue placeholder="Seleccionar objetivo" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Users</SelectItem>
-                                        <SelectItem value="new_users">New Users Only</SelectItem>
-                                        <SelectItem value="selected">Selected Users</SelectItem>
+                                        <SelectItem value="all">Todos los Usuarios</SelectItem>
+                                        <SelectItem value="new_users">Solo Nuevos Usuarios</SelectItem>
+                                        <SelectItem value="selected">Usuarios Seleccionados</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.allowed_users_type && <p className="text-red-500 text-sm">{errors.allowed_users_type}</p>}
@@ -178,7 +212,17 @@ export default function Create({ users }: CreatePageProps) {
                             {/* Selected Users */}
                             {data.allowed_users_type === 'selected' && (
                                 <div className="space-y-2">
-                                    <Label>Select Users</Label>
+                                    <div className="flex justify-between items-center">
+                                        <Label>Seleccionar Usuarios</Label>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleClearSelection}
+                                        >
+                                            Limpiar Selección
+                                        </Button>
+                                    </div>
                                     <div className="space-y-2 rounded-md border p-4 max-h-60 overflow-y-auto">
                                         {users.map((user) => (
                                             <div key={user.id} className="flex items-center space-x-2">
@@ -200,7 +244,7 @@ export default function Create({ users }: CreatePageProps) {
                         </CardContent>
                         <CardFooter>
                             <Button type="submit" disabled={processing}>
-                                {processing ? 'Creating...' : 'Create Coupon'}
+                                {processing ? 'Creando...' : 'Crear Cupón'}
                             </Button>
                         </CardFooter>
                     </form>

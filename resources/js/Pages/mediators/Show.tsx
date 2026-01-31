@@ -473,8 +473,8 @@ export default function MediatorShow({ mediator, auth, current_session, other_ac
                                             </Button>
                                         )}
                                         {/* Error for specific index if needed, but errors bag usually returns array format like 'participants.0.email' */}
-                                        {errors[`participants.${index}.email`] && (
-                                            <p className="text-xs text-red-600">{errors[`participants.${index}.email`]}</p>
+                                        {(errors as any)[`participants.${index}.email`] && (
+                                            <p className="text-xs text-red-600">{(errors as any)[`participants.${index}.email`]}</p>
                                         )}
                                     </div>
                                 ))}

@@ -16,7 +16,7 @@ class IndexController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return Inertia::render('Backoffice/Coupons/Index', [
+        return Inertia::render('backoffice/Coupons/Index', [
             'coupons' => $coupons
         ]);
     }

@@ -30,7 +30,7 @@ apiClient.interceptors.response.use(
 );
 
 export const api = {
-    get: async (url, config = {}) => {
+    get: async (url: string, config: any = {}) => {
         try {
             return await apiClient.get(url, config);
         } catch (error) {
@@ -38,7 +38,7 @@ export const api = {
             throw error;
         }
     },
-    post: async (url, data = {}, config = {}) => {
+    post: async (url: string, data: any = {}, config: any = {}) => {
         try {
             await refreshCsrfToken();
             return await apiClient.post(url, data, config);
@@ -47,11 +47,11 @@ export const api = {
             throw error;
         }
     },
-    put: async (url, data = {}, config = {}) => {
+    put: async (url: string, data: any = {}, config: any = {}) => {
         await refreshCsrfToken();
         return apiClient.put(url, data, config);
     },
-    delete: async (url, config = {}) => {
+    delete: async (url: string, config: any = {}) => {
         await refreshCsrfToken();
         return apiClient.delete(url, config);
     },

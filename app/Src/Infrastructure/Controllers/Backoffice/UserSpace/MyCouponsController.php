@@ -20,7 +20,7 @@ class MyCouponsController extends Controller
             }])
             ->get();
         
-        return Inertia::render('Backoffice/UserSpace/MyCoupons', [
+        return Inertia::render('backoffice/UserSpace/MyCoupons', [
             'coupons' => $coupons
         ]);
     }

@@ -32,12 +32,6 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                         Mis Sesiones
                     </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link className="block w-full" href={route('backoffice.profile.edit')} as="button" prefetch onClick={cleanup}>
-                        <Settings className="mr-2" />
-                        Settings
-                    </Link>
-                </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

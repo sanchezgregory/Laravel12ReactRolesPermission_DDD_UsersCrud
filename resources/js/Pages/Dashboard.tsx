@@ -80,12 +80,7 @@ const iconMap: Record<string, any> = {
   Package
 };
 
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Dashboard',
-    href: '/backoffice/dashboard',
-  },
-];
+const breadcrumbs: BreadcrumbItem[] = [];
 
 export default function Dashboard({
   kpis = [],

@@ -12,9 +12,9 @@ class CreateController extends Controller
     {
         // For user selection list. In production with many users, this should be an async search.
         // For now, loading users for the selection list.
-        $users = User::select('id', 'name', 'email')->get();
+        $users = User::role('user')->select('id', 'name', 'email')->get();
 
-        return Inertia::render('Backoffice/Coupons/Create', [
+        return Inertia::render('backoffice/Coupons/Create', [
             'users' => $users
         ]);
     }

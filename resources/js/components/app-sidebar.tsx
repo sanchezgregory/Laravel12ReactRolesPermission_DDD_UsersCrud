@@ -24,6 +24,7 @@ export function AppSidebar() {
     const { auth } = usePage().props as unknown as { auth: { user: User & { roles: string[] } } };
     const isAdmin = auth.user.roles.includes('admin');
     const isMediator = auth.user.roles.includes('mediator');
+    const isEndUser = auth.user.roles.includes('user') && !isAdmin && !isMediator;
 
     let mainNavItems: NavItem[] = [
         {
@@ -42,6 +43,26 @@ export function AppSidebar() {
             icon: Users,
         },
     ];
+
+    if (isEndUser) {
+        mainNavItems = [
+            {
+                title: 'Mis Sesiones',
+                href: '/my-sessions',
+                icon: Calendar,
+            },
+            {
+                title: 'Mis Cupones',
+                href: '/my-coupons',
+                icon: Ticket,
+            },
+            {
+                title: 'Mediadores',
+                href: '/mediators',
+                icon: Users,
+            },
+        ];
+    }
 
     if (isAdmin) {
         mainNavItems = [
@@ -104,7 +125,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                {!isEndUser && <NavFooter items={footerNavItems} className="mt-auto" />}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

@@ -14,7 +14,7 @@ class EditController extends Controller
         $coupon = Coupon::with('users:id,name,email')->findOrFail($id);
         $users = User::select('id', 'name', 'email')->get();
 
-        return Inertia::render('Backoffice/Coupons/Edit', [
+        return Inertia::render('backoffice/Coupons/Edit', [
             'coupon' => $coupon,
             'users' => $users
         ]);

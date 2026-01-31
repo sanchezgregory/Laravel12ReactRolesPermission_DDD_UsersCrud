@@ -12,12 +12,17 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(): Response|\Illuminate\Http\RedirectResponse
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
         // Check if user is strictly a mediator (and not an admin who sees everything)
         $isMediator = $user->hasRole('mediator') && !$user->hasRole('admin');
+        
+        // Redirect standard users to their sessions page
+        if ($user->hasRole('user') && !$user->hasRole('admin') && !$user->hasRole('mediator')) {
+            return redirect()->route('user.sessions');
+        }
 
         // 1. Top 5 Mediators (Most scheduled sessions)
         $topMediatorsQuery = SessionPayment::select('mediator_id', DB::raw('count(*) as total'))

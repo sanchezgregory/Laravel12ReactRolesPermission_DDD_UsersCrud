@@ -23,20 +23,20 @@ export default function MyCoupons({ coupons }: MyCouponsProps) {
         <AppLayout
             breadcrumbs={[
                 { title: 'Home', href: '/backoffice/dashboard' },
-                { title: 'My Coupons', href: null },
+                { title: 'Mis cupones', href: null },
             ]}
         >
-            <Head title="My Coupons" />
+            <Head title="Mis cupones" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <h2 className="font-semibold text-xl text-foreground leading-tight mb-6">
-                        My Coupons
+                        Mis cupones
                     </h2>
 
                     {coupons.length === 0 ? (
                         <div className="bg-card text-card-foreground p-6 rounded-lg border shadow-sm text-center">
-                            You don't have any coupons available at the moment.
+                            No tienes cupones disponibles en este momento.
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

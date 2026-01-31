@@ -28,7 +28,7 @@ interface CustomPageProps extends PageProps {
 const MessageHandler: React.FC = () => {
     const { flash = {}, errorBags = {} } = usePage<CustomPageProps>().props;
 
-    const formatErrorMessages = useCallback((errors: string[]): JSX.Element => {
+    const formatErrorMessages = useCallback((errors: string[]): React.ReactNode => {
         return (
             <>
                 <div className="toast-message">
